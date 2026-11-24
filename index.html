@@ -234,6 +234,14 @@ function home(){
   const dueToday=db.invoices.filter(i=>i.type==='sale'&&i.due&&i.due<=t&&invTotal(i)-(+i.paid||0)>0&&party(i.partyId)&&partyBalance(party(i.partyId))>0);
   const T=(h,i,t,c)=>`<a class="tile" href="#${h}"><i style="background:${c}22;color:${c}">${i}</i>${t}</a>`;
   $('#app').innerHTML=`
+  ${!ab().token?`<div class="card" style="border:2px solid var(--w);background:#fffaf0">
+    <h2>☁️ شغّل المزامنة بين الموبايل والكمبيوتر</h2>
+    ${ab().pendingCode?`<p class="muted" style="margin-bottom:6px">اتبعت كود على <b dir="ltr">${esc(ab().email)}</b> — اكتبه هنا:</p>
+     <div class="row"><div><input id="gmC" inputmode="numeric" placeholder="الكود (6 أرقام)"></div><div style="flex:0"><button class="btn" onclick="confirmCode()">تأكيد</button></div></div>
+     <p style="margin-top:6px"><a href="javascript:void(Object.assign(ab(),{pendingCode:false}),save(),route())" class="muted">تغيير الإيميل / إعادة الإرسال</a></p>`
+    :`<p class="muted" style="margin-bottom:8px">اكتب <b>جيميل المصنع</b> — ونفس الجيميل على كل جهاز. بعدها أي فاتورة أو تعديل على جهاز يظهر على التاني لوحده، ونسخة احتياطية توصل الجيميل كل يوم.</p>
+     <div class="row"><div><input id="gmE" dir="ltr" type="email" placeholder="name@gmail.com" value="${esc(ab().email||'')}"></div><div style="flex:0"><button class="btn" onclick="sendCode()">ابعت كود</button></div></div>`}
+  </div>`:''}
   <img class="banner" src="${db.settings.banner||BANNER}" alt="${esc(db.settings.name)}">
   <p class="muted" style="text-align:center;margin:-4px 0 10px">${new Date().toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
   <div class="tiles">
@@ -645,7 +653,7 @@ async function sendCode(){const em=$('#gmE').value.trim().toLowerCase();if(!/^\S
   catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}finally{$('#busy').style.display='none'}}
 async function confirmCode(){const c=$('#gmC').value.trim();if(!c){toast('اكتب الكود');return}
   $('#busy').style.display='flex';try{const j=await gsCall({action:'confirm',email:ab().email,code:c});if(!j.ok)throw new Error(j.err);
-    Object.assign(ab(),{token:j.token,pendingCode:false});log('تأكيد جيميل النسخ '+ab().email);save();toast('✅ تمام — النسخ والمزامنة شغالين');syncNow().then(()=>runBackup(false))}
+    Object.assign(ab(),{token:j.token,pendingCode:false});log('تأكيد جيميل النسخ '+ab().email);save();toast('✅ تمام — النسخ والمزامنة شغالين');route();syncNow().then(()=>runBackup(false))}
   catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}finally{$('#busy').style.display='none'}}
 async function uploadAll(data,silent){
   const t=await uploadTG(data,silent),g=await uploadGmail(data,silent);
@@ -752,6 +760,7 @@ async function applyUpdate(){toast('⬆️ بيحدّث...');
   try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
   location.reload()}
 const NOTES=[
+  ['1.4',['خانة تشغيل المزامنة بقت في أول الصفحة الرئيسية لحد ما تتشغل']],
   ['1.3',['التحديثات بقت توصل على طول أول ما البرنامج يتفتح وفيه نت']],
  ['1.2',['زرار المزامنة فوق: أخضر = متزامن، أصفر = بيتزامن، أحمر = فيه مشكلة','تنبيه لما يكون فيه إصدار جديد، وقايمة باللي اتغيّر']],
  ['1.1',['مزامنة الفواتير وكل البيانات بين الموبايل والكمبيوتر']],
@@ -815,7 +824,7 @@ function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{cons
 function resetAll(){if(prompt('⚠️ كل البيانات هتتمسح'+(ab().token?' من كل الأجهزة المتزامنة':'')+'.\nاكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
 
-const APP_VERSION='1.3';
+const APP_VERSION='1.4';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded&&!busyUI()){reloaded=true;location.reload()}});
