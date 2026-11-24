@@ -1,7 +1,7 @@
 // مصنع الأمانة للأعلاف — نسخة الكمبيوتر
 // برمجة المبرمج محمد سعيد 01123840671
 // البرنامج بيفتح من الرابط، فأي تحديث بيوصل لوحده، والبيانات محفوظة على الكمبيوتر.
-const { app, BrowserWindow, shell, Menu } = require('electron');
+const { app, BrowserWindow, shell, Menu, session } = require('electron');
 const path = require('path');
 const APP_URL = 'https://sm0902556-sketch.github.io/amana-feed/';
 const HOST = 'sm0902556-sketch.github.io';
@@ -30,5 +30,10 @@ function create() {
   });
 }
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
-app.whenReady().then(create);
+// كل مرة البرنامج يفتح: يمسح ملفات البرنامج القديمة المتخزنة (مش البيانات) عشان ياخد آخر إصدار
+app.whenReady().then(async () => {
+  try { await session.defaultSession.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }); } catch (e) {}
+  try { await session.defaultSession.clearCache(); } catch (e) {}
+  create();
+});
 app.on('window-all-closed', () => app.quit());

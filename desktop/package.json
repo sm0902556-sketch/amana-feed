@@ -1,7 +1,7 @@
 {
   "name": "amana-feed",
   "productName": "مصنع الأمانة",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "برنامج مصنع الأمانة للأعلاف — المبرمج محمد سعيد 01123840671",
   "author": "M saeed",
   "main": "main.js",

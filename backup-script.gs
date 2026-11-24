@@ -13,9 +13,19 @@ const KEEP = 60;   // عدد النسخ اللي تفضل لكل محل في ا�
 function doPost(e) {
   try {
     const b = JSON.parse(e.postData.contents);
+    const props = PropertiesService.getScriptProperties();
+
+    // ===== حساب المزامنة: اسم مستخدم + كلمة سر (زي برنامج الإخوة) =====
+    if (b.action === 'login' || b.action === 'usync') {
+      const id = acctId(b.app, b.user);
+      if (!id) return out({ ok: false, err: 'اكتب اسم مستخدم (حروف إنجليزي أو أرقام)' });
+      if (b.action === 'login') return out(login(props, id, String(b.pass || '')));
+      if (!okTok(props, id, b.token)) return out({ ok: false, err: 'سجّل الدخول تاني', relogin: 1 });
+      return out(sync(id, b));
+    }
+
     const email = String(b.email || '').trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return out({ ok: false, err: 'الإيميل غلط' });
-    const props = PropertiesService.getScriptProperties();
     const shop = b.shop || 'البرنامج';
 
     // 1) طلب كود تأكيد
@@ -61,6 +71,35 @@ function doPost(e) {
   } catch (err) {
     return out({ ok: false, err: String(err) });
   }
+}
+
+function acctId(app, user) {
+  const u = String(user || '').trim().toLowerCase();
+  if (!/^[a-z0-9_.\-]{3,30}$/.test(u)) return '';
+  return String(app || 'app').replace(/[^a-z0-9_\-]/gi, '') + '~' + u;
+}
+function hashPass(pass, salt) {
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + '|' + pass, Utilities.Charset.UTF_8));
+}
+function login(props, id, pass) {
+  if (pass.length < 4) return { ok: false, err: 'كلمة السر لازم 4 حروف أو أرقام على الأقل' };
+  const fails = Number(props.getProperty('fail:' + id) || 0);
+  if (fails >= 10) return { ok: false, err: 'محاولات غلط كتير — كلم المبرمج 01123840671' };
+  const raw = props.getProperty('acct:' + id);
+  let created = false;
+  if (!raw) {
+    const salt = Utilities.getUuid();
+    props.setProperty('acct:' + id, JSON.stringify({ salt: salt, h: hashPass(pass, salt), at: Date.now() }));
+    created = true;
+  } else {
+    const a = JSON.parse(raw);
+    if (hashPass(pass, a.salt) !== a.h) { props.setProperty('fail:' + id, String(fails + 1)); return { ok: false, err: 'كلمة السر غلط' }; }
+    props.deleteProperty('fail:' + id);
+  }
+  const token = Utilities.getUuid();
+  const toks = getToks(props, id); toks.push(token);
+  props.setProperty('toks:' + id, JSON.stringify(toks.slice(-10)));
+  return { ok: true, token: token, created: created };
 }
 
 function getToks(props, email) {
