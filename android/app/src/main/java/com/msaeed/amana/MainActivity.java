@@ -7,6 +7,11 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.hardware.biometrics.BiometricManager;
+import android.hardware.biometrics.BiometricPrompt;
+import android.os.CancellationSignal;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -38,14 +43,20 @@ public class MainActivity extends Activity {
     static final int FILE_REQ = 7;
     WebView web;
     ValueCallback<Uri[]> fileCb;
+    SharedPreferences prefs;
+    boolean unlocked = false, prompting = false;
+    long leftAt = 0;
+    static final long RELOCK_MS = 30_000;
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         Window w = getWindow();
         w.setStatusBarColor(Color.parseColor("#2f5d34"));
+        prefs = getSharedPreferences("amana", MODE_PRIVATE);
         web = new WebView(this);
         setContentView(web);
+        if (bioLockOn()) { web.setVisibility(View.INVISIBLE); unlock(); } else unlocked = true;
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -179,7 +190,78 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String version() {
-            return "1.0";
+            return "1.1";
+        }
+
+        @JavascriptInterface
+        public boolean hasBiometric() { return bioSupported(); }
+
+        @JavascriptInterface
+        public boolean getBioLock() { return bioLockOn(); }
+
+        // تشغيل/إيقاف القفل — لازم البصمة الأول للتأكيد
+        @JavascriptInterface
+        public void setBioLock(boolean on) {
+            runOnUiThread(() -> authenticate(on ? "أكّد البصمة لتشغيل القفل" : "أكّد البصمة لإيقاف القفل", ok -> {
+                if (ok) prefs.edit().putBoolean("bioLock", on).apply();
+                boolean now = bioLockOn();
+                web.evaluateJavascript("window.bioLockChanged&&bioLockChanged(" + now + "," + ok + ")", null);
+            }));
+        }
+    }
+
+    // ===================== قفل البصمة =====================
+    boolean bioSupported() {
+        if (Build.VERSION.SDK_INT < 28) return false;
+        if (Build.VERSION.SDK_INT >= 30) {
+            BiometricManager bm = getSystemService(BiometricManager.class);
+            return bm != null && bm.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS;
+        }
+        if (Build.VERSION.SDK_INT == 29) {
+            BiometricManager bm = getSystemService(BiometricManager.class);
+            return bm != null && bm.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS;
+        }
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+    }
+    boolean bioLockOn() { return prefs.getBoolean("bioLock", false) && bioSupported(); }
+
+    interface Done { void ok(boolean success); }
+
+    void authenticate(String subtitle, Done done) {
+        if (Build.VERSION.SDK_INT < 28) { done.ok(true); return; }
+        if (prompting) return;
+        prompting = true;
+        BiometricPrompt.Builder b = new BiometricPrompt.Builder(this)
+                .setTitle("مصنع الأمانة")
+                .setSubtitle(subtitle);
+        if (Build.VERSION.SDK_INT >= 30) {
+            b.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+        } else if (Build.VERSION.SDK_INT == 29) {
+            b.setDeviceCredentialAllowed(true);
+        } else {
+            b.setNegativeButton("إلغاء", getMainExecutor(), (d, w) -> { prompting = false; done.ok(false); });
+        }
+        b.build().authenticate(new CancellationSignal(), getMainExecutor(), new BiometricPrompt.AuthenticationCallback() {
+            @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult r) { prompting = false; done.ok(true); }
+            @Override public void onAuthenticationError(int code, CharSequence msg) { prompting = false; done.ok(false); }
+        });
+    }
+
+    void unlock() {
+        authenticate("افتح البرنامج بالبصمة", ok -> {
+            if (ok) { unlocked = true; web.setVisibility(View.VISIBLE); }
+            else finish();  // لو لغى البصمة البرنامج يقفل
+        });
+    }
+
+    @Override
+    protected void onStop() { super.onStop(); if (unlocked) leftAt = System.currentTimeMillis(); }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        if (bioLockOn() && unlocked && leftAt > 0 && System.currentTimeMillis() - leftAt > RELOCK_MS) {
+            unlocked = false; web.setVisibility(View.INVISIBLE); unlock();
         }
     }
 
