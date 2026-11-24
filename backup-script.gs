@@ -120,6 +120,11 @@ function syncFile(email) {
   return f.hasNext() ? f.next() : folder.createFile(name, JSON.stringify({ rev: 0, recs: {} }), 'application/json');
 }
 function sync(email, b) {
+  const props = PropertiesService.getScriptProperties();
+  const changes0 = Array.isArray(b.changes) ? b.changes : [];
+  // تشييك سريع: لو مفيش جديد مش محتاجين نفتح ملف الدرايف خالص
+  const knownRev = props.getProperty('rev:' + email);
+  if (!changes0.length && knownRev !== null && Number(b.since) === Number(knownRev)) return { ok: true, rev: Number(knownRev), recs: [] };
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const file = syncFile(email);
@@ -136,6 +141,7 @@ function sync(email, b) {
       changed = true;
     });
     if (changed) file.setContent(JSON.stringify(st)); else if (changes.length) st.rev--;
+    props.setProperty('rev:' + email, String(st.rev));
     const mine = {}; changes.forEach(c => { if (!keep[c.k]) mine[c.k] = 1; });
     const recs = [];
     Object.keys(st.recs).forEach(k => {

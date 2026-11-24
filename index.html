@@ -234,7 +234,6 @@ function home(){
   const dueToday=db.invoices.filter(i=>i.type==='sale'&&i.due&&i.due<=t&&invTotal(i)-(+i.paid||0)>0&&party(i.partyId)&&partyBalance(party(i.partyId))>0);
   const T=(h,i,t,c)=>`<a class="tile" href="#${h}"><i style="background:${c}22;color:${c}">${i}</i>${t}</a>`;
   $('#app').innerHTML=`
-  ${!ab().utoken?`<div class="card" style="border:2px solid var(--w);background:#fffaf0"><h2>☁️ دخول المزامنة بين الموبايل والكمبيوتر</h2>${loginBox()}</div>`:''}
   <img class="banner" src="${db.settings.banner||BANNER}" alt="${esc(db.settings.name)}">
   <p class="muted" style="text-align:center;margin:-4px 0 10px">${new Date().toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
   <div class="tiles">
@@ -766,6 +765,7 @@ async function applyUpdate(){toast('⬆️ بيحدّث...');
   try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
   location.reload()}
 const NOTES=[
+  ['1.6',['المزامنة بقت فورية: الفاتورة تظهر على الجهاز التاني في خلال ثواني','الجهاز الجديد بيسحب كل الفواتير على طول من غير أسئلة','خانة دخول المزامنة اتشالت من الصفحة الرئيسية (موجودة في الإعدادات)']],
   ['1.5',['المزامنة بقت باسم مستخدم وكلمة سر زي برنامج الإخوة','فوق مكتوب «متزامن — اسم الحساب» وجنبه زرار تحديث']],
   ['1.4',['خانة تشغيل المزامنة بقت في أول الصفحة الرئيسية لحد ما تتشغل']],
   ['1.3',['التحديثات بقت توصل على طول أول ما البرنامج يتفتح وفيه نت']],
@@ -778,24 +778,37 @@ function showNotes(all){const list=all?NOTES:NOTES.filter(n=>n[0]===APP_VERSION)
 function afterUpdateNotice(){try{const seen=localStorage.getItem('amana_seen_ver');
   if(seen&&seen!==APP_VERSION)setTimeout(()=>showNotes(false),2200);
   localStorage.setItem('amana_seen_ver',APP_VERSION)}catch(e){}}
-function scheduleSync(){if(applying||!ab().utoken)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(),2500)}
+function scheduleSync(){if(applying||!ab().utoken)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(),600)}
 function busyUI(){return $('#modal').classList.contains('on')||(/^#(sale|purchase|edit)/.test(location.hash)&&cur&&!cur.id&&cur.lines.length)}
 async function syncNow(manual){
   const a=ab();if(!a.utoken||!gsURL()){syncSt('');if(manual)syncInfo();return}
   if(syncing){syncAgain=true;return}
   if(navigator.onLine===false){syncSt('📴 مفيش نت','هيتزامن أول ما النت يرجع');return}
-  syncing=true;syncSt('🔄','بيتزامن...');
+  syncing=true;const runT=setTimeout(()=>syncSt('🔄','بيتزامن...'),1200);
   try{
     const st=sst();let recsAll=[];
     if(!st.init){
       const r=await gsCall({action:'usync',app:'amana',user:a.user,token:a.utoken,since:0,changes:[]});if(!r.ok){if(r.relogin){a.utoken='';save()}throw new Error(r.err)}
       if(r.rev>0){
         const hasLocal=db.invoices.length||db.parties.length||db.cash.length;
-        const replace=!hasLocal||confirm('فيه بيانات للمصنع متزامنة من جهاز تاني.\n\n• "موافق" = الجهاز ده ياخد بيانات المصنع (والفواتير اللي على الجهاز ده هتتمسح)\n• "إلغاء" = يدمج بيانات الجهاز ده مع بيانات المصنع');
         applying=true;
-        if(replace){const mine=db.settings.ab;db.items=[];db.parties=[];db.invoices=[];db.cash=[];db.log=[];r.recs.forEach(applyRec);if(mine)Object.assign(db.settings.ab=db.settings.ab||{},{token:mine.token,email:mine.email,pendingCode:false,user:mine.user,utoken:mine.utoken});
+        if(!hasLocal){const mine=db.settings.ab;db.items=[];db.parties=[];db.invoices=[];db.cash=[];db.log=[];r.recs.forEach(applyRec);if(mine)Object.assign(db.settings.ab=db.settings.ab||{},{token:mine.token,email:mine.email,pendingCode:false,user:mine.user,utoken:mine.utoken});
           afterApply();st.base={};for(const [k,v] of Object.entries(snapMap()))st.base[k]=hsh(v);}
-        else{r.recs.forEach(applyRec);afterApply();st.base={};}
+        else{ // دمج من غير ما حاجة تتمسح ومن غير تكرار
+          const sv=c=>r.recs.filter(x=>!x.del&&x.k.startsWith(c+'|')).map(x=>x.v);
+          const sItems=sv('items'),sParties=sv('parties'),sInv=new Set(sv('invoices').map(i=>i.id));
+          const imap={},pmap={};
+          db.items=db.items.filter(li=>{const si=sItems.find(x=>x.code===li.code);if(si&&si.id!==li.id){imap[li.id]=si.id;return false}return true});
+          db.parties=db.parties.filter(lp=>{const sp=sParties.find(x=>x.type===lp.type&&x.name.trim()===lp.name.trim());if(sp&&sp.id!==lp.id){pmap[lp.id]=sp.id;return false}return true});
+          db.invoices.forEach(i=>{if(pmap[i.partyId])i.partyId=pmap[i.partyId];i.lines.forEach(l=>{if(imap[l.itemId])l.itemId=imap[l.itemId]})});
+          db.cash.forEach(c=>{if(pmap[c.partyId])c.partyId=pmap[c.partyId]});
+          const localInv=db.invoices.filter(i=>!sInv.has(i.id));
+          r.recs.filter(x=>!x.k.startsWith('meta|settings')).forEach(applyRec);
+          for(const t of ['sale','purchase']){let mx=Math.max(0,...db.invoices.filter(i=>i.type===t&&!localInv.includes(i)).map(i=>+i.no||0));
+            localInv.filter(i=>i.type===t).sort((a,b)=>a.id<b.id?-1:1).forEach(i=>{i.no=++mx})}
+          afterApply();st.base={};
+          log('دمج بيانات الجهاز ده مع بيانات المصنع');
+        }
         applying=false;
       }else st.base={};
       st.rev=r.rev;st.init=true;sstSave(st);
@@ -817,12 +830,14 @@ async function syncNow(manual){
       try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}applying=false}
     st.rev=rev;sstSave(st);a.lastSync=Date.now();try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}
     syncSt('☁️ '+new Date().toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}),'آخر مزامنة');
+    const newInv=recs.filter(x=>x.k.startsWith('invoices|')&&!x.del).length;
+    if(newInv&&!manual)toast('🔄 وصل '+newInv+' فاتورة/تعديل من الجهاز التاني');
     if((recs.length||recsAll.length)&&!busyUI())route();
     if(manual)toast('✅ اتزامن'+(recs.length?` — وصل ${recs.length} تعديل`:''));
   }catch(e){applying=false;syncSt('⚠️','المزامنة فشلت: '+(e.message||e));if(manual)toast('⚠️ المزامنة فشلت: '+(e.message||'مفيش نت'))}
-  finally{syncing=false;if(syncAgain){syncAgain=false;setTimeout(()=>syncNow(),500)}}
+  finally{clearTimeout(runT);syncing=false;if(syncAgain){syncAgain=false;setTimeout(()=>syncNow(),500)}}
 }
-setInterval(()=>{if(document.visibilityState==='visible')syncNow()},45000);
+setInterval(()=>{if(document.visibilityState==='visible'&&ab().utoken&&navigator.onLine!==false&&!syncing)syncNow()},5000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncNow()});
 window.addEventListener('online',()=>syncNow());
 
@@ -831,7 +846,7 @@ function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{cons
 function resetAll(){if(prompt('⚠️ كل البيانات هتتمسح'+(ab().token?' من كل الأجهزة المتزامنة':'')+'.\nاكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
 
-const APP_VERSION='1.5';
+const APP_VERSION='1.6';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded&&!busyUI()){reloaded=true;location.reload()}});
