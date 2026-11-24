@@ -223,10 +223,10 @@ function cashBalance(){
 function invProfit(inv){return n2(inv.lines.reduce((a,l)=>{const it=item(l.itemId);const cost=it?+it.buy||0:0;return a+l.qty*(l.price-(+l.disc||0)-cost)},0)-(+inv.discount||0))}
 
 /* ===================== التنقل ===================== */
-const pages={home,sale:()=>invoiceForm('sale'),purchase:()=>invoiceForm('purchase'),items,parties,more,invoices,cash,reports,settings,party:partyPage,edit:editInvoice,log:logPage};
+const pages={capital:capitalPage,home,sale:()=>invoiceForm('sale'),purchase:()=>invoiceForm('purchase'),items,parties,more,invoices,cash,reports,settings,party:partyPage,edit:editInvoice,log:logPage};
 function route(){
   const [p,arg]=location.hash.slice(1).split('/');const f=pages[p]||home;
-  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===(p||'home')||(a.dataset.p==='more'&&['purchase','invoices','cash','reports','settings','log'].includes(p))));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===(p||'home')||(a.dataset.p==='more'&&['purchase','invoices','cash','reports','settings','log','capital'].includes(p))));
   $('#hName').textContent=db.settings.name||'مصنع الأمانة';
   $('#hSub').textContent=db.settings.sub||'للأعلاف';
   $('#app').innerHTML='';f(arg);window.scrollTo(0,0);
@@ -249,7 +249,7 @@ function home(){
   <p class="muted" style="text-align:center;margin:-4px 0 10px">${new Date().toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
   <div class="tiles">
    ${T('sale','🧾','فاتورة بيع','#2f5d34')}${T('purchase','📥','فاتورة شراء','#c99a3b')}${T('items','🌽','الأصناف','#d4a017')}
-   ${T('parties','👥','العملاء','#1f5fa8')}${T('parties/supplier','🚚','الموردين','#7b4fa8')}${T('cash','💰','الخزينة','#0f8a6b')}
+   ${T('parties','👥','العملاء','#1f5fa8')}${T('parties/supplier','🚚','الموردين','#7b4fa8')}${T('cash','💰','الخزينة','#0f8a6b')}${T('capital','🏦','رأس المال','#8a6420')}
    ${T('invoices','📄','الفواتير','#555')}${T('reports','📊','التقارير','#c0392b')}${T('settings','⚙️','الإعدادات','#666')}
   </div>
   <div class="stats">
@@ -258,6 +258,11 @@ function home(){
    <div class="stat b"><small>رصيد الخزينة</small><b>${fm(cashBalance())} ج</b></div>
    <div class="stat r"><small>فلوس عند العملاء</small><b>${fm(debts)} ج</b></div>
   </div>
+  ${(()=>{const c=capSummary();return `<a class="card" href="#capital" style="display:block;text-decoration:none;color:inherit;border-right:4px solid #8a6420">
+   <h2>🏦 رأس المال <small class="muted" style="font-weight:normal">التفاصيل ←</small></h2>
+   <div class="stats" style="margin:0"><div class="stat" style="border-right-color:#8a6420"><small>صافي رأس المال</small><b>${fm(c.netCap)} ج</b></div>
+   <div class="stat b"><small>قيمة المصنع دلوقتي</small><b>${fm(c.worth)} ج</b></div>
+   <div class="stat ${c.pl>=0?'':'r'}"><small>${c.pl>=0?'الربح لحد دلوقتي':'الخسارة لحد دلوقتي'}</small><b class="${c.pl>=0?'pos':'neg'}">${fm(Math.abs(c.pl))} ج</b></div></div></a>`})()}
   ${dueToday.length?`<div class="card"><h2>⏰ فواتير جه ميعاد استحقاقها <span class="badge">${dueToday.length}</span></h2><div class="tbl"><table><tr><th>العميل</th><th>فاتورة</th><th>الاستحقاق</th><th>رصيده</th><th></th></tr>
    ${dueToday.map(i=>{const p=party(i.partyId);return `<tr><td>${esc(p.name)}</td><td>${i.no}</td><td>${i.due}</td><td class="neg">${fm(partyBalance(p))}</td><td><button class="btn wa s" onclick="remind('${p.id}')">واتساب</button></td></tr>`}).join('')}</table></div></div>`:''}
   ${low.length?`<div class="card"><h2>⚠️ أصناف قربت تخلص <span class="badge">${low.length}</span></h2><div class="chips">${low.map(i=>`<span class="chip">${esc(i.name)} <small>(${fm(stockOf(i))} ${esc(i.unit)})</small></span>`).join('')}</div></div>`:''}
@@ -552,15 +557,15 @@ function shareStmt(id){const p=party(id);sharePDF(stmtHTML(id),'كشف-حساب-
 /* ===================== المزيد ===================== */
 function more(){
   $('#app').innerHTML=`<div class="stats">
-  ${[['purchase','📥','فاتورة شراء'],['invoices','📄','كل الفواتير'],['cash','💰','الخزينة والمصروفات'],['reports','📊','التقارير'],['settings','⚙️','الإعدادات والنسخ الاحتياطي'],['log','📝','سجل التعديلات']].map(([h,i,t])=>`<a class="stat" style="text-decoration:none;color:inherit" href="#${h}"><b>${i}</b>${t}</a>`).join('')}</div>${footer()}`;
+  ${[['purchase','📥','فاتورة شراء'],['capital','🏦','رأس المال'],['invoices','📄','كل الفواتير'],['cash','💰','الخزينة والمصروفات'],['reports','📊','التقارير'],['settings','⚙️','الإعدادات والنسخ الاحتياطي'],['log','📝','سجل التعديلات']].map(([h,i,t])=>`<a class="stat" style="text-decoration:none;color:inherit" href="#${h}"><b>${i}</b>${t}</a>`).join('')}</div>${footer()}`;
 }
 
 /* ===================== الخزينة ===================== */
 function cash(){
-  const kinds={expense:'مصروف',deposit:'إيداع / إضافة',withdraw:'سحب'};
+  const kinds={expense:'مصروف',deposit:'إيداع / إضافة',withdraw:'سحب'};const capK={capital:'إضافة رأس مال',drawings:'مسحوبات شخصية'};
   const mv=[];
   db.invoices.forEach(i=>{if(+i.paid)mv.push({d:i.date,t:`${i.type==='sale'?'بيع':'شراء'} فاتورة ${i.no} - ${party(i.partyId)?.name||'نقدي'}`,in:i.type==='sale'?+i.paid:0,out:i.type==='purchase'?+i.paid:0})});
-  db.cash.forEach(c=>mv.push({d:c.date,t:(c.partyId?(c.kind==='collect'?'تحصيل من ':'سداد إلى ')+(party(c.partyId)?.name||''):kinds[c.kind]||'')+(c.note?' - '+c.note:''),in:c.dir==='in'?+c.amount:0,out:c.dir==='out'?+c.amount:0,id:c.id}));
+  db.cash.forEach(c=>mv.push({d:c.date,t:(c.partyId?(c.kind==='collect'?'تحصيل من ':'سداد إلى ')+(party(c.partyId)?.name||''):kinds[c.kind]||capK[c.kind]||'')+(c.partner?' — '+c.partner:'')+(c.note?' - '+c.note:''),in:c.dir==='in'?+c.amount:0,out:c.dir==='out'?+c.amount:0,id:c.id}));
   mv.sort((a,b)=>b.d.localeCompare(a.d));
   $('#app').innerHTML=`<div class="stats"><div class="stat b"><small>رصيد الخزينة</small><b>${fm(cashBalance())} ج</b></div></div>
   <div class="card"><h2>حركة جديدة</h2><div class="row">
@@ -580,7 +585,7 @@ function reports(){
   window.dr=()=>{const a=$('#r1').value,b=$('#r2').value;const inR=x=>(!a||x>=a)&&(!b||x<=b);
    const sales=db.invoices.filter(i=>i.type==='sale'&&inR(i.date)),pur=db.invoices.filter(i=>i.type==='purchase'&&inR(i.date));
    const st=sales.reduce((s,i)=>s+invTotal(i),0),pt=pur.reduce((s,i)=>s+invTotal(i),0),pr=sales.reduce((s,i)=>s+invProfit(i),0);
-   const exp=db.cash.filter(c=>c.kind==='expense'&&inR(c.date)).reduce((s,c)=>s+(+c.amount),0);
+   const exp=db.cash.filter(c=>c.kind==='expense'&&inR(c.date)).reduce((s,c)=>s+(+c.amount),0);const drw=db.cash.filter(c=>c.kind==='drawings'&&inR(c.date)).reduce((s,c)=>s+(+c.amount),0);
    const col=db.cash.filter(c=>c.kind==='collect'&&inR(c.date)).reduce((s,c)=>s+(+c.amount),0);
    const byItem={};sales.forEach(i=>i.lines.forEach(l=>{const k=l.itemId;byItem[k]=byItem[k]||{n:l.name,u:l.unit,q:0,v:0};byItem[k].q+=+l.qty;byItem[k].v+=l.qty*(l.price-(+l.disc||0))}));
    const byDay={};sales.forEach(i=>{byDay[i.date]=(byDay[i.date]||0)+invTotal(i)});
@@ -590,7 +595,8 @@ function reports(){
     <div class="stat"><small>مجمل الربح</small><b>${fm(pr)}</b></div>
     <div class="stat r"><small>المصروفات</small><b>${fm(exp)}</b></div>
     <div class="stat b"><small>صافي الربح</small><b>${fm(pr-exp)}</b></div>
-    <div class="stat"><small>تحصيلات من العملاء</small><b>${fm(col)}</b></div></div>
+    <div class="stat"><small>تحصيلات من العملاء</small><b>${fm(col)}</b></div>
+    <div class="stat w"><small>مسحوبات الشركاء</small><b>${fm(drw)}</b></div></div>
    <div class="card"><h2>مبيعات الأصناف</h2><div class="tbl"><table><tr><th>الصنف</th><th>الكمية</th><th>القيمة</th></tr>${Object.values(byItem).sort((x,y)=>y.v-x.v).map(r=>`<tr><td>${esc(r.n)}</td><td>${fm(r.q)} ${esc(r.u||'')}</td><td>${fm(r.v)}</td></tr>`).join('')}</table></div></div>
    <div class="card"><h2>مبيعات كل يوم</h2><div class="tbl"><table><tr><th>اليوم</th><th>المبيعات</th></tr>${Object.entries(byDay).sort((x,y)=>y[0].localeCompare(x[0])).map(([k,v])=>`<tr><td>${k}</td><td>${fm(v)}</td></tr>`).join('')}</table></div></div>
    <p class="muted">الربح محسوب على سعر الشراء الحالي لكل صنف.</p>`;
@@ -598,10 +604,59 @@ function reports(){
   };dr();
 }
 
+
+/* ===================== رأس المال ===================== */
+function partners(){const m=(db.settings.mgr||'').split('\n').map(l=>l.split('/')[0].trim()).filter(Boolean);return m.length?m:['صاحب المصنع']}
+function capSummary(){
+  const capIn=db.cash.filter(c=>c.kind==='capital').reduce((a,c)=>a+(+c.amount),0),drOut=db.cash.filter(c=>c.kind==='drawings').reduce((a,c)=>a+(+c.amount),0),netCap=n2(capIn-drOut);
+  const cashB=cashBalance(),stockV=n2(db.items.filter(i=>!i.service).reduce((a,i)=>a+Math.max(0,stockOf(i))*(+i.buy||0),0));
+  let recv=0,pay=0;db.parties.forEach(p=>{const b=partyBalance(p);if(p.type==='customer'){if(b>0)recv+=b;else pay+=-b}else{if(b>0)pay+=b;else recv+=-b}});
+  const worth=n2(cashB+stockV+recv-pay);return {capIn,drOut,netCap,cashB,stockV,recv:n2(recv),pay:n2(pay),worth,pl:n2(worth-netCap)}}
+function capitalPage(){
+  const cap=db.cash.filter(c=>c.kind==='capital'),dr=db.cash.filter(c=>c.kind==='drawings');
+  const capIn=cap.reduce((a,c)=>a+(+c.amount),0),drOut=dr.reduce((a,c)=>a+(+c.amount),0),netCap=n2(capIn-drOut);
+  const cashB=cashBalance();
+  const stockV=n2(db.items.filter(i=>!i.service).reduce((a,i)=>a+Math.max(0,stockOf(i))*(+i.buy||0),0));
+  let recv=0,pay=0;db.parties.forEach(p=>{const b=partyBalance(p);if(p.type==='customer'){if(b>0)recv+=b;else pay+=-b}else{if(b>0)pay+=b;else recv+=-b}});
+  const worth=n2(cashB+stockV+recv-pay),pl=n2(worth-netCap);
+  const per={};partners().forEach(n=>per[n]={in:0,out:0});
+  cap.forEach(c=>{const k=c.partner||'بدون اسم';per[k]=per[k]||{in:0,out:0};per[k].in+=+c.amount});
+  dr.forEach(c=>{const k=c.partner||'بدون اسم';per[k]=per[k]||{in:0,out:0};per[k].out+=+c.amount});
+  const mv=[...cap,...dr].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  $('#app').innerHTML=`
+  <div class="stats">
+   <div class="stat" style="border-right-color:#8a6420"><small>صافي رأس المال</small><b>${fm(netCap)} ج</b><small>اتحط ${fm(capIn)} — اتسحب ${fm(drOut)}</small></div>
+   <div class="stat b"><small>قيمة المصنع دلوقتي</small><b>${fm(worth)} ج</b></div>
+   <div class="stat ${pl>=0?'':'r'}"><small>${pl>=0?'الربح لحد دلوقتي':'الخسارة لحد دلوقتي'}</small><b class="${pl>=0?'pos':'neg'}">${fm(Math.abs(pl))} ج</b></div>
+  </div>
+  <div class="card"><h2>📊 قيمة المصنع دلوقتي (المركز المالي)</h2><div class="tbl"><table>
+   <tr><td>💰 رصيد الخزينة</td><td><b>${fm(cashB)}</b></td></tr>
+   <tr><td>🌽 قيمة البضاعة في المخزن (بسعر الشراء)</td><td><b>${fm(stockV)}</b></td></tr>
+   <tr><td>👥 فلوس لينا عند العملاء</td><td><b class="pos">${fm(recv)}</b></td></tr>
+   <tr><td>🚚 فلوس علينا للموردين</td><td><b class="neg">- ${fm(pay)}</b></td></tr>
+   <tr style="background:#eef5ee"><td><b>= قيمة المصنع</b></td><td><b>${fm(worth)}</b></td></tr>
+   <tr><td>— صافي رأس المال</td><td>${fm(netCap)}</td></tr>
+   <tr style="background:${pl>=0?'#eef5ee':'#fdeceb'}"><td><b>= ${pl>=0?'الربح':'الخسارة'}</b></td><td><b class="${pl>=0?'pos':'neg'}">${fm(Math.abs(pl))}</b></td></tr>
+  </table></div></div>
+  <div class="card"><h2>➕ حركة رأس مال</h2><div class="row">
+   <div><label>النوع</label><select id="ck"><option value="capital">إضافة رأس مال (فلوس دخلت المصنع)</option><option value="drawings">مسحوبات شخصية (فلوس خرجت للشريك)</option></select></div>
+   <div><label>الشريك</label><select id="cp">${Object.keys(per).map(n=>`<option>${esc(n)}</option>`).join('')}</select></div>
+   <div><label>المبلغ</label><input type="number" step="any" id="ca2"></div><div><label>التاريخ</label><input type="date" id="cd2" value="${today()}"></div>
+   <div><label>ملاحظة</label><input id="cn2"></div><div style="flex:0"><button class="btn" onclick="saveCap()">حفظ</button></div></div>
+   <p class="muted" style="margin-top:6px">الحركة دي بتأثر على رصيد الخزينة كمان. أسماء الشركاء بتتاخد من خانة «الإدارة» في الإعدادات.</p></div>
+  <div class="card"><h2>👥 حساب كل شريك</h2><div class="tbl"><table><tr><th>الشريك</th><th>حط</th><th>سحب</th><th>الصافي</th></tr>
+   ${Object.entries(per).map(([n,v])=>`<tr><td>${esc(n)}</td><td>${fm(v.in)}</td><td>${fm(v.out)}</td><td><b>${fm(v.in-v.out)}</b></td></tr>`).join('')}</table></div></div>
+  <div class="card"><h2>📜 حركات رأس المال</h2>${mv.length?`<div class="tbl"><table><tr><th>التاريخ</th><th>النوع</th><th>الشريك</th><th>المبلغ</th><th>ملاحظة</th></tr>
+   ${mv.map(c=>`<tr class="click" onclick="delCash('${c.id}')"><td>${c.date}</td><td>${c.kind==='capital'?'<span class="badge g">إضافة</span>':'<span class="badge">مسحوبات</span>'}</td><td>${esc(c.partner||'')}</td><td>${fm(c.amount)}</td><td>${esc(c.note||'')}</td></tr>`).join('')}</table></div><p class="muted" style="margin-top:6px">دوس على أي حركة عشان تمسحها.</p>`:'<p class="muted">مفيش حركات لسه — ابدأ بإضافة رأس المال اللي اتحط في المصنع.</p>'}</div>`;
+  window.saveCap=()=>{const a=+$('#ca2').value;if(!(a>0)){toast('اكتب المبلغ');return}const k=$('#ck').value,pt=$('#cp').value;
+    db.cash.push({id:uid(),date:$('#cd2').value||today(),dir:k==='capital'?'in':'out',amount:a,kind:k,partner:pt,note:$('#cn2').value});
+    log(`${k==='capital'?'إضافة رأس مال':'مسحوبات'} ${pt} ${fm(a)}`);save();route();toast('✅ اتسجلت')};
+}
+
 /* ===================== الإعدادات ===================== */
 function settings(){
   const s=db.settings;
-  $('#app').innerHTML=`<div class="card"><h2>⚙️ بيانات المصنع</h2>
+  $('#app').innerHTML=`${bioCard()}<div class="card"><h2>⚙️ بيانات المصنع</h2>
   <div class="row"><div><label>اسم المصنع</label><input id="s1" value="${esc(s.name)}"></div><div><label>اسم المدير</label><input id="s2" value="${esc(s.owner)}"></div></div>
   <div class="row"><div><label>التليفون</label><input id="s3" value="${esc(s.phone)}"></div><div><label>العنوان</label><input id="s4" value="${esc(s.address)}"></div></div>
   <div class="row"><div><label>الوصف تحت الاسم</label><input id="s6" value="${esc(s.sub||'')}"></div><div><label>كلمة آخر الفاتورة</label><input id="s5" value="${esc(s.footer)}"></div></div>
@@ -611,9 +666,6 @@ function settings(){
   <div class="card"><h2>🖼️ البنر</h2><img class="banner" src="${db.settings.banner||BANNER}">
   <div class="row"><label class="btn o" style="margin:0;color:var(--g)">📷 تغيير البنر<input type="file" accept="image/*" style="display:none" onchange="setBanner(this.files[0])"></label>
   ${db.settings.banner?'<button class="btn r" onclick="delete db.settings.banner;save();route()">رجوع للبنر الأصلي</button>':''}</div></div>
-  ${window.Android&&Android.hasBiometric&&Android.hasBiometric()?`<div class="card"><h2>🔒 قفل البرنامج بالبصمة</h2>
-   <p class="muted" style="margin-bottom:8px">لما يتفعّل، البرنامج يطلب البصمة (أو رمز قفل الموبايل) كل ما يتفتح.</p>
-   <label style="font-size:16px;color:var(--tx);display:flex;align-items:center;gap:10px"><input type="checkbox" id="bioChk" style="width:22px;height:22px" ${Android.getBioLock()?'checked':''} onchange="Android.setBioLock(this.checked)"> <b id="bioTxt">${Android.getBioLock()?'✅ القفل بالبصمة شغال':'القفل بالبصمة مقفول'}</b></label></div>`:''}
   <div class="card"><h2>👥 المستخدمين والحساب</h2>${ab().utoken?`<p class="muted">انت داخل باسم <b dir="ltr" style="color:var(--tx)">${esc(ab().user)}</b> (${esc(ab().roleName||'')})</p>
    <hr style="border:0;border-top:1px solid var(--bd);margin:10px 0"><div id="usersBox"><p class="muted">⏳ بيحمّل المستخدمين...</p></div>
    ${ab().role==='owner'?`<button class="btn" style="width:100%;justify-content:center;margin-top:10px;padding:12px" onclick="addUserModal()">+ مستخدم جديد</button>`:''}
@@ -667,6 +719,18 @@ async function doLogin(){const u=$('#lgU').value.trim().toLowerCase(),pw=$('#lgP
     Object.assign(ab(),{user:j.user||u,utoken:j.token,role:j.role,roleName:j.roleName});$('#lgP').value='';showGate();try{localStorage.removeItem(SK)}catch(e){}log('تسجيل دخول باسم '+u);save();
     toast(j.created?'✅ اتعمل الحساب '+u+' (صاحب المصنع)':'✅ دخلت باسم '+u+' — بيجيب بيانات المصنع');route();await syncNow(true)}
   catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}finally{$('#busy').style.display='none';$('#busy').textContent='⏳ بيجهّز الـ PDF...'}}
+const APK_URL='https://github.com/sm0902556-sketch/amana-feed/releases/latest/download/amana.apk';
+function bioCard(){
+  const isAndroid=/Android/i.test(navigator.userAgent),inApp=!!window.Android;
+  if(!isAndroid&&!inApp)return '';
+  let body;
+  if(!inApp)body=`<p>البصمة بتشتغل في <b>تطبيق الموبايل</b> بس، وانت فاتح البرنامج من المتصفح.</p><a class="btn" style="margin-top:8px" href="${APK_URL}">📱 نزّل تطبيق الموبايل</a>`;
+  else if(!Android.hasBiometric)body=`<p>التطبيق اللي عندك <b>قديم</b> ومافيهوش البصمة.</p><p class="muted" style="margin:4px 0 8px">نزّل الجديد وثبّته فوق القديم (البيانات مش هتتمسح):</p><a class="btn" href="${APK_URL}">⬇️ نزّل التطبيق الجديد</a>`;
+  else if(!Android.hasBiometric())body=`<p>الموبايل ده <b>مافيهوش بصمة أو قفل شاشة متسجل</b>.</p><p class="muted" style="margin-top:4px">سجّل بصمة من إعدادات الموبايل ← الأمان، وارجع هنا.</p>`;
+  else body=`<p class="muted" style="margin-bottom:8px">لما يتفعّل، البرنامج يطلب البصمة (أو رمز قفل الموبايل) كل ما يتفتح.</p>
+   <label style="font-size:16px;color:var(--tx);display:flex;align-items:center;gap:10px"><input type="checkbox" id="bioChk" style="width:22px;height:22px" ${Android.getBioLock()?'checked':''} onchange="Android.setBioLock(this.checked)"> <b id="bioTxt">${Android.getBioLock()?'✅ القفل بالبصمة شغال':'القفل بالبصمة مقفول'}</b></label>`;
+  return `<div class="card" style="border:2px solid var(--g)"><h2>🔒 قفل البرنامج بالبصمة</h2>${body}</div>`;
+}
 window.bioLockChanged=(on,ok)=>{const c=$('#bioChk'),t=$('#bioTxt');if(c)c.checked=on;if(t)t.textContent=on?'✅ القفل بالبصمة شغال':'القفل بالبصمة مقفول';
   toast(ok?(on?'🔒 اتفعّل القفل بالبصمة':'🔓 اتلغى القفل بالبصمة'):'البصمة ماتأكدتش');log(ok?(on?'تفعيل القفل بالبصمة':'إلغاء القفل بالبصمة'):'محاولة بصمة فشلت');save()};
 async function loadUsers(){const box=$('#usersBox');if(!box)return;
@@ -786,7 +850,7 @@ function syncInfo(){const a=ab(),st=sst(),pend=pendingCount();
    <div class="row" style="margin-top:10px"><button class="btn" onclick="closeModal();syncNow(true)">🔄 تحديث</button><button class="btn o" onclick="doLogout()">تسجيل خروج</button></div>`
   :`<p>مش داخل بحساب.</p>`}
   <hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
-  <p>📦 إصدار البرنامج: <b>${APP_VERSION}</b> ${newVer?`— <b class="neg">فيه إصدار جديد ${esc(newVer.version)}</b>`:'<span class="pos">(أحدث إصدار)</span>'}</p>
+  <p>📦 إصدار البرنامج: <b>${APP_VERSION}</b>${window.Android&&Android.version?` — تطبيق الموبايل: <b>${esc(Android.version())}</b>`:''} ${newVer?`— <b class="neg">فيه إصدار جديد ${esc(newVer.version)}</b>`:'<span class="pos">(أحدث إصدار)</span>'}</p>
   <div class="row" style="margin-top:8px">${newVer?'<button class="btn w" onclick="applyUpdate()">⬆️ تحديث للإصدار الجديد</button>':''}<button class="btn o" onclick="checkUpdate(true)">🔍 دوّر على تحديث</button><button class="btn o" onclick="showNotes(true)">📝 الجديد في الإصدار</button></div>
   <div class="row" style="margin-top:10px"><button class="btn o" onclick="closeModal()">إغلاق</button></div>`)}
 
@@ -805,6 +869,8 @@ async function applyUpdate(){toast('⬆️ بيحدّث...');
   try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
   location.reload()}
 const NOTES=[
+  ['2.1',['صفحة رأس المال: إضافة رأس مال، مسحوبات الشركاء، قيمة المصنع، والربح أو الخسارة']],
+  ['2.0',['قسم البصمة بقى أول حاجة في الإعدادات، وبيقولك لو التطبيق محتاج يتحدّث']],
   ['1.9',['قفل البرنامج بالبصمة على الموبايل (من الإعدادات) — محتاج تطبيق الموبايل الجديد']],
   ['1.8',['شاشة تسجيل دخول باليوزر والباسورد زي برنامج الإخوة — وأي جهاز داخل بنفس اليوزر بيتحدّث لوحده']],
   ['1.7',['شاشة «المستخدمين والحساب» زي برنامج الإخوة: مستخدم جديد، تغيير الباسورد، تسجيل خروج']],
@@ -889,7 +955,7 @@ function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{cons
 function resetAll(){if(prompt('⚠️ كل البيانات هتتمسح'+(ab().token?' من كل الأجهزة المتزامنة':'')+'.\nاكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
 
-const APP_VERSION='1.9';
+const APP_VERSION='2.1';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded&&!busyUI()){reloaded=true;location.reload()}});
