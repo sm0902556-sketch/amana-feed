@@ -88,12 +88,20 @@ tr.click{cursor:pointer}tr.click:hover{background:#faf6ea}
 #pdfbox th{background:#e6e6e6}
 .busy{position:fixed;inset:0;background:#0007;z-index:90;display:none;align-items:center;justify-content:center;color:#fff;font-size:18px}
 .banner{display:block;width:100%;max-width:640px;margin:0 auto 12px;border-radius:16px;box-shadow:0 4px 14px #0003;aspect-ratio:1280/853;object-fit:cover;background:#efe2bf}
+#syncSt{margin-right:auto;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid #ffffff55;background:#ffffff22;color:#fff}
+#syncSt i{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block;font-style:normal}
+#syncSt.ok i{background:#3ee07a;box-shadow:0 0 0 3px #3ee07a44}#syncSt.run i{background:#ffd23f;animation:blink .8s infinite}#syncSt.err i{background:#ff5a4f}#syncSt.off i{background:#ccc}
+@keyframes blink{50%{opacity:.25}}
+#updBar{position:fixed;bottom:62px;left:10px;right:10px;z-index:45;background:#c99a3b;color:#fff;padding:10px 14px;border-radius:14px;display:none;align-items:center;gap:10px;justify-content:center;font-weight:600;box-shadow:0 4px 14px #0005}
+@media(min-width:900px){#updBar{bottom:14px;left:auto;right:210px;max-width:520px}}
+#updBar button{background:#fff;color:#8a6420;border:0;border-radius:16px;padding:6px 14px;font-weight:700;cursor:pointer}
 </style>
 </head>
 <body>
 <div id="splash"><div class="ring"><svg viewBox="0 0 64 64" width="84" height="84"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><h1>مصنع الأمانة</h1><h3>للأعلاف</h3><div class="bar"><i></i></div><div class="by">برمجة المبرمج محمد سعيد — 01123840671</div></div>
 <div id="pdfwrap" dir="ltr" style="position:fixed;top:0;left:-20000px;width:794px"><div id="pdfbox" dir="ltr"></div></div><div class="busy" id="busy">⏳ بيجهّز الـ PDF...</div>
-<header><div class="logo"><svg viewBox="0 0 64 64" width="28" height="28"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><div><h1 id="hName">مصنع الأمانة</h1><small id="hSub">للأعلاف</small></div><span id="syncSt" onclick="syncNow(true)" style="margin-right:auto;font-size:12px;opacity:.95;cursor:pointer;white-space:nowrap"></span></header>
+<header><div class="logo"><svg viewBox="0 0 64 64" width="28" height="28"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><div><h1 id="hName">مصنع الأمانة</h1><small id="hSub">للأعلاف</small></div><span id="syncSt" class="off" onclick="syncInfo()"><i></i><span>المزامنة</span></span></header>
+<div id="updBar">🎉 <span id="updTxt">فيه إصدار جديد من البرنامج</span> <button onclick="applyUpdate()">تحديث دلوقتي</button></div>
 <main id="app"></main>
 <nav class="bottom" id="nav">
 <a href="#home" data-p="home"><span>🏠</span>الرئيسية</a>
@@ -702,11 +710,61 @@ function afterApply(){
   db.invoices.sort((a,b)=>a.id<b.id?-1:1);db.cash.sort((a,b)=>a.id<b.id?-1:1);
   db.log.sort((a,b)=>a.d<b.d?1:-1);if(db.log.length>500)db.log.length=500;
 }
-function syncSt(t,title){const e=$('#syncSt');if(e){e.textContent=t;e.title=title||''}}
+let syncState={c:'off',t:'المزامنة مقفولة',err:''};
+function syncSt(t,title){
+  const c=!ab().token?'off':t.startsWith('🔄')?'run':(t.startsWith('⚠️')||t.startsWith('📴'))?'err':'ok';
+  const label=c==='off'?'المزامنة مقفولة':c==='run'?'بيتزامن...':c==='err'?(t.startsWith('📴')?'مفيش نت':'مش متزامن'):'متزامن '+t.replace('☁️','').trim();
+  syncState={c,t:label,err:title||''};
+  const e=$('#syncSt');if(e){e.className=c;e.querySelector('span').textContent=label}
+}
+function pendingCount(){try{const st=sst(),m=snapMap();let n=0;for(const [k,v] of Object.entries(m))if(st.base[k]!==hsh(v))n++;for(const k of Object.keys(st.base))if(!(k in m))n++;return st.init?n:Object.keys(m).length}catch(e){return 0}}
+function syncInfo(){const a=ab(),st=sst(),pend=pendingCount();
+  const col={ok:'#1f8a4c',run:'#b8860b',err:'#c0392b',off:'#777'}[syncState.c];
+  modal(`<h3>☁️ المزامنة والإصدار</h3>
+  <div style="background:${col}15;border:1px solid ${col}55;border-radius:10px;padding:10px;margin-bottom:10px">
+   <b style="color:${col};font-size:17px">${syncState.c==='ok'?'✅':syncState.c==='run'?'🔄':syncState.c==='err'?'⚠️':'⏸️'} ${esc(syncState.t)}</b>
+   ${syncState.err&&syncState.c==='err'?`<p class="muted" style="margin-top:4px">${esc(syncState.err)}</p>`:''}
+  </div>
+  ${a.token?`<table><tr><td>الجيميل</td><td dir="ltr"><b>${esc(a.email)}</b></td></tr>
+   <tr><td>آخر مزامنة</td><td><b>${fdt(a.lastSync)}</b></td></tr>
+   <tr><td>تعديلات لسه مطلعتش</td><td><b class="${pend?'neg':'pos'}">${pend?pend+' تعديل':'مفيش — كله متزامن'}</b></td></tr>
+   <tr><td>النت</td><td>${navigator.onLine===false?'<b class="neg">مقطوع</b>':'<b class="pos">شغال</b>'}</td></tr></table>
+   <div class="row" style="margin-top:10px"><button class="btn" onclick="closeModal();syncNow(true)">🔄 مزامنة دلوقتي</button></div>`
+  :`<p>المزامنة مش شغالة على الجهاز ده.</p><p class="muted" style="margin:6px 0">عشان تشغّلها: الإعدادات ← جيميل صاحب المصنع ← اكتب الجيميل وأكّد الكود (نفس الجيميل على كل الأجهزة).</p>
+   <div class="row"><a class="btn" href="#settings" onclick="closeModal()">⚙️ افتح الإعدادات</a></div>`}
+  <hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
+  <p>📦 إصدار البرنامج: <b>${APP_VERSION}</b> ${newVer?`— <b class="neg">فيه إصدار جديد ${esc(newVer.version)}</b>`:'<span class="pos">(أحدث إصدار)</span>'}</p>
+  <div class="row" style="margin-top:8px">${newVer?'<button class="btn w" onclick="applyUpdate()">⬆️ تحديث للإصدار الجديد</button>':''}<button class="btn o" onclick="checkUpdate(true)">🔍 دوّر على تحديث</button><button class="btn o" onclick="showNotes(true)">📝 الجديد في الإصدار</button></div>
+  <div class="row" style="margin-top:10px"><button class="btn o" onclick="closeModal()">إغلاق</button></div>`)}
+
+/* ===================== التحديثات ===================== */
+let newVer=null;
+async function checkUpdate(manual){
+  if(!location.protocol.startsWith('http')){if(manual)toast('التحديث بيشتغل لما البرنامج يفتح من الرابط');return}
+  try{const v=await fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json());
+    if(v.version&&v.version!==APP_VERSION&&verNum(v.version)>verNum(APP_VERSION)){newVer=v;$('#updTxt').textContent='فيه إصدار جديد '+v.version+' من البرنامج';$('#updBar').style.display='flex'}
+    else if(manual)toast('✅ عندك أحدث إصدار ('+APP_VERSION+')');
+    if(manual&&$('#modal').classList.contains('on'))syncInfo();
+  }catch(e){if(manual)toast('مفيش نت — مقدرتش أدوّر على تحديث')}
+}
+const verNum=v=>String(v).split('.').reduce((a,x)=>a*1000+(+x||0),0);
+async function applyUpdate(){toast('⬆️ بيحدّث...');
+  try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
+  location.reload()}
+const NOTES=[
+ ['1.2',['زرار المزامنة فوق: أخضر = متزامن، أصفر = بيتزامن، أحمر = فيه مشكلة','تنبيه لما يكون فيه إصدار جديد، وقايمة باللي اتغيّر']],
+ ['1.1',['مزامنة الفواتير وكل البيانات بين الموبايل والكمبيوتر']],
+ ['1.0',['أول إصدار: فواتير بيع وشراء، أصناف ومخزن، عملاء وموردين، خزينة، تقارير، PDF على واتساب، نسخ احتياطي يومي على الجيميل']]];
+function showNotes(all){const list=all?NOTES:NOTES.filter(n=>n[0]===APP_VERSION);
+  modal(`<h3>🎉 ${all?'سجل الإصدارات':'اتحدّث البرنامج للإصدار '+APP_VERSION}</h3>${list.map(([v,a])=>`<p style="margin-top:8px"><b>إصدار ${v}</b></p><ul style="margin:4px 20px 0 0">${a.map(x=>`<li style="margin:3px 0">${esc(x)}</li>`).join('')}</ul>`).join('')}
+  <div class="row" style="margin-top:12px"><button class="btn" onclick="closeModal()">تمام</button></div>`)}
+function afterUpdateNotice(){try{const seen=localStorage.getItem('amana_seen_ver');
+  if(seen&&seen!==APP_VERSION)setTimeout(()=>showNotes(false),2200);
+  localStorage.setItem('amana_seen_ver',APP_VERSION)}catch(e){}}
 function scheduleSync(){if(applying||!ab().token)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(),2500)}
 function busyUI(){return $('#modal').classList.contains('on')||(/^#(sale|purchase|edit)/.test(location.hash)&&cur&&!cur.id&&cur.lines.length)}
 async function syncNow(manual){
-  const a=ab();if(!a.token||!gsURL()){syncSt('');return}
+  const a=ab();if(!a.token||!gsURL()){syncSt('');if(manual)syncInfo();return}
   if(syncing){syncAgain=true;return}
   if(navigator.onLine===false){syncSt('📴 مفيش نت','هيتزامن أول ما النت يرجع');return}
   syncing=true;syncSt('🔄','بيتزامن...');
@@ -756,10 +814,12 @@ function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{cons
 function resetAll(){if(prompt('⚠️ كل البيانات هتتمسح'+(ab().token?' من كل الأجهزة المتزامنة':'')+'.\nاكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
 
-const APP_VERSION='1.1';
+const APP_VERSION='1.2';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 route();
+syncSt(ab().token?'🔄':'');
 setTimeout(()=>syncNow(),1500);
+setTimeout(()=>checkUpdate(),4000);setInterval(()=>checkUpdate(),10*60*1000);afterUpdateNotice();
 setTimeout(checkAutoBackup,3000);setInterval(checkAutoBackup,30*60*1000);window.addEventListener('online',checkAutoBackup);
 setTimeout(()=>{$('#splash').classList.add('hide');setTimeout(()=>$('#splash').remove(),700)},1600);
 </script>

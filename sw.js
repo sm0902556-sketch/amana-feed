@@ -1,5 +1,5 @@
 // مصنع الأمانة — يشتغل من غير نت، ويجيب التحديث أول ما النت يكون موجود
-const CACHE='amana-v2';
+const CACHE='amana-v3';
 const LIBS=['https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js'];
 const FILES=['./','./index.html','./manifest.json','./banner.jpg','./icon-192.png','./icon-512.png','./icon-maskable.png',...LIBS];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(FILES.map(f=>c.add(f).catch(()=>{})))).then(()=>self.skipWaiting()))});
