@@ -93,7 +93,7 @@ tr.click{cursor:pointer}tr.click:hover{background:#faf6ea}
 <body>
 <div id="splash"><div class="ring"><svg viewBox="0 0 64 64" width="84" height="84"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><h1>مصنع الأمانة</h1><h3>للأعلاف</h3><div class="bar"><i></i></div><div class="by">برمجة المبرمج محمد سعيد — 01123840671</div></div>
 <div id="pdfwrap" dir="ltr" style="position:fixed;top:0;left:-20000px;width:794px"><div id="pdfbox" dir="ltr"></div></div><div class="busy" id="busy">⏳ بيجهّز الـ PDF...</div>
-<header><div class="logo"><svg viewBox="0 0 64 64" width="28" height="28"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><div><h1 id="hName">مصنع الأمانة</h1><small id="hSub">للأعلاف</small></div></header>
+<header><div class="logo"><svg viewBox="0 0 64 64" width="28" height="28"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><div><h1 id="hName">مصنع الأمانة</h1><small id="hSub">للأعلاف</small></div><span id="syncSt" onclick="syncNow(true)" style="margin-right:auto;font-size:12px;opacity:.95;cursor:pointer;white-space:nowrap"></span></header>
 <main id="app"></main>
 <nav class="bottom" id="nav">
 <a href="#home" data-p="home"><span>🏠</span>الرئيسية</a>
@@ -144,9 +144,9 @@ function defaultDB(){
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function load(){try{const s=localStorage.getItem(KEY);db=s?JSON.parse(s):defaultDB()}catch(e){db=defaultDB()}
-  db.seq=db.seq||{sale:0,purchase:0};if(db.settings.name==='مدشة الأمانة'){db.settings.name='مصنع الأمانة';db.settings.sub='للأعلاف'}db.log=db.log||[];db.parties.forEach((p,k)=>{if(!p.code)p.code=String(1001+k)});}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('⚠️ تعذر الحفظ على الجهاز')}}
-function log(msg){db.log.unshift({d:new Date().toISOString(),m:msg});if(db.log.length>500)db.log.length=500}
+  db.seq=db.seq||{sale:0,purchase:0};if(db.settings.name==='مدشة الأمانة'){db.settings.name='مصنع الأمانة';db.settings.sub='للأعلاف'}db.log=db.log||[];db.log.forEach(l=>{if(!l.id)l.id='L'+uid()});db.parties.forEach((p,k)=>{if(!p.code)p.code=String(1001+k)});}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('⚠️ تعذر الحفظ على الجهاز')}if(typeof scheduleSync==='function')scheduleSync()}
+function log(msg){db.log.unshift({id:uid(),d:new Date().toISOString(),m:msg});if(db.log.length>500)db.log.length=500}
 load();
 
 /* ===================== أدوات ===================== */
@@ -637,7 +637,7 @@ async function sendCode(){const em=$('#gmE').value.trim().toLowerCase();if(!/^\S
   catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}finally{$('#busy').style.display='none'}}
 async function confirmCode(){const c=$('#gmC').value.trim();if(!c){toast('اكتب الكود');return}
   $('#busy').style.display='flex';try{const j=await gsCall({action:'confirm',email:ab().email,code:c});if(!j.ok)throw new Error(j.err);
-    Object.assign(ab(),{token:j.token,pendingCode:false});log('تأكيد جيميل النسخ '+ab().email);save();toast('✅ تمام — النسخ هتوصل على الجيميل');runBackup(false)}
+    Object.assign(ab(),{token:j.token,pendingCode:false});log('تأكيد جيميل النسخ '+ab().email);save();toast('✅ تمام — النسخ والمزامنة شغالين');syncNow().then(()=>runBackup(false))}
   catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}finally{$('#busy').style.display='none'}}
 async function uploadAll(data,silent){
   const t=await uploadTG(data,silent),g=await uploadGmail(data,silent);
@@ -663,8 +663,9 @@ function abCard(){const a=ab(),l=localCopies(),next=a.last?a.last+DAY:Date.now()
    آخر رفع على جيميل: <b>${fdt(a.lastGmail)}</b> — على تليجرام: <b>${fdt(a.lastCloud)}</b>${a.lastErr?`<br><span class="neg">${esc(a.lastErr)}</span>`:''}</p>
   <div class="row" style="margin:8px 0"><button class="btn" onclick="runBackup(true)">💾 اعمل نسخة وارفعها دلوقتي</button></div>
   <div style="background:#f3f8f3;border-radius:10px;padding:10px;margin:8px 0">
-   <b style="color:var(--g)">📧 جيميل صاحب المصنع</b>
-   ${a.token?`<p style="margin-top:6px">✅ النسخ بتوصل على <b dir="ltr">${esc(a.email)}</b> <button class="btn o s" onclick="Object.assign(ab(),{token:'',pendingCode:false});save();route()">تغيير</button></p>`
+   <b style="color:var(--g)">📧 جيميل صاحب المصنع — النسخ الاحتياطي والمزامنة</b><p class="muted" style="margin-top:4px">اكتب نفس الجيميل على كل جهاز (الموبايل والكمبيوتر) — كل الفواتير والبيانات هتتزامن بينهم.</p>
+   ${a.token?`<p style="margin-top:6px">✅ متوصل بـ <b dir="ltr">${esc(a.email)}</b> <button class="btn o s" onclick="if(confirm('فصل الجهاز ده عن المزامنة؟'))Object.assign(ab(),{token:'',pendingCode:false}),localStorage.removeItem(SK),save(),route()">فصل</button></p>
+   <p class="muted">آخر مزامنة: <b>${fdt(a.lastSync)}</b> <button class="btn s" onclick="syncNow(true)">🔄 مزامنة دلوقتي</button></p>`
    :a.pendingCode?`<p class="muted" style="margin:6px 0">اتبعت كود على <b dir="ltr">${esc(a.email)}</b> — اكتبه هنا:</p><div class="row"><div><input id="gmC" inputmode="numeric" placeholder="الكود"></div><div style="flex:0"><button class="btn" onclick="confirmCode()">تأكيد</button></div></div><p style="margin-top:6px"><a href="javascript:void(Object.assign(ab(),{pendingCode:false}),save(),route())" class="muted">تغيير الإيميل / إعادة الإرسال</a></p>`
    :`<div class="row" style="margin-top:6px"><div><input id="gmE" dir="ltr" type="email" placeholder="name@gmail.com" value="${esc(a.email||'')}"></div><div style="flex:0"><button class="btn" onclick="sendCode()">ابعت كود</button></div></div>`}
   </div>
@@ -677,14 +678,88 @@ function abCard(){const a=ab(),l=localCopies(),next=a.last?a.last+DAY:Date.now()
 function restoreLocal(k){const c=localCopies()[k];if(!c||!confirm('البيانات الحالية هتتبدل بنسخة '+fdt(c.d)+'. متأكد؟'))return;const banner=db.settings.banner;db=c.data;if(banner)db.settings.banner=banner;log('استرجاع نسخة تلقائية '+fdt(c.d));save();route();toast('✅ اترجعت')}
 function dlLocal(k){const c=localCopies()[k];dl(new File([JSON.stringify(c.data)],'amana-backup-'+new Date(c.d).toISOString().slice(0,10)+'.json',{type:'application/json'}))}
 
+
+/* ===================== المزامنة بين الأجهزة ===================== */
+const SK='amana_sync_state',COLS=['items','parties','invoices','cash','log'];
+let syncing=false,syncAgain=false,syncTimer=null,applying=false;
+function hsh(str){let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return (h>>>0).toString(36)+str.length.toString(36)}
+function sst(){try{return JSON.parse(localStorage.getItem(SK))||{rev:0,base:{},init:false}}catch(e){return {rev:0,base:{},init:false}}}
+function sstSave(st){try{localStorage.setItem(SK,JSON.stringify(st))}catch(e){}}
+const PRIV=['token','email','pendingCode'];
+function pubSettings(st){const c=JSON.parse(JSON.stringify(st));if(c.ab)PRIV.forEach(k=>delete c.ab[k]);return c}
+function snapMap(){const m={};for(const c of COLS)for(const r of db[c]||[])m[c+'|'+r.id]=JSON.stringify(r);
+  m['meta|settings']=JSON.stringify(pubSettings(db.settings));m['meta|seq']=JSON.stringify(db.seq);return m}
+function applyRec(x){
+  const i=x.k.indexOf('|'),col=x.k.slice(0,i),id=x.k.slice(i+1);
+  if(col==='meta'){if(x.del)return;
+    if(id==='settings'){const mine=db.settings.ab||{};const v=x.v;v.ab=Object.assign({},v.ab||{});PRIV.forEach(k=>{if(mine[k]!==undefined)v.ab[k]=mine[k]});db.settings=v}
+    else if(id==='seq')db.seq=Object.assign({sale:0,purchase:0},x.v);return}
+  if(!COLS.includes(col))return;const arr=db[col];const k=arr.findIndex(r=>r.id===id);
+  if(x.del){if(k>=0)arr.splice(k,1)}else if(k>=0)arr[k]=x.v;else arr.push(x.v);
+}
+function afterApply(){
+  for(const t of ['sale','purchase'])db.seq[t]=Math.max(+db.seq[t]||0,...db.invoices.filter(i=>i.type===t).map(i=>+i.no||0),0);
+  db.invoices.sort((a,b)=>a.id<b.id?-1:1);db.cash.sort((a,b)=>a.id<b.id?-1:1);
+  db.log.sort((a,b)=>a.d<b.d?1:-1);if(db.log.length>500)db.log.length=500;
+}
+function syncSt(t,title){const e=$('#syncSt');if(e){e.textContent=t;e.title=title||''}}
+function scheduleSync(){if(applying||!ab().token)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(),2500)}
+function busyUI(){return $('#modal').classList.contains('on')||(/^#(sale|purchase|edit)/.test(location.hash)&&cur&&!cur.id&&cur.lines.length)}
+async function syncNow(manual){
+  const a=ab();if(!a.token||!gsURL()){syncSt('');return}
+  if(syncing){syncAgain=true;return}
+  if(navigator.onLine===false){syncSt('📴 مفيش نت','هيتزامن أول ما النت يرجع');return}
+  syncing=true;syncSt('🔄','بيتزامن...');
+  try{
+    const st=sst();let recsAll=[];
+    if(!st.init){
+      const r=await gsCall({action:'sync',email:a.email,token:a.token,since:0,changes:[]});if(!r.ok)throw new Error(r.err);
+      if(r.rev>0){
+        const hasLocal=db.invoices.length||db.parties.length||db.cash.length;
+        const replace=!hasLocal||confirm('فيه بيانات للمصنع متزامنة من جهاز تاني.\n\n• "موافق" = الجهاز ده ياخد بيانات المصنع (والفواتير اللي على الجهاز ده هتتمسح)\n• "إلغاء" = يدمج بيانات الجهاز ده مع بيانات المصنع');
+        applying=true;
+        if(replace){const mine=db.settings.ab;db.items=[];db.parties=[];db.invoices=[];db.cash=[];db.log=[];r.recs.forEach(applyRec);if(mine)Object.assign(db.settings.ab=db.settings.ab||{},{token:mine.token,email:mine.email,pendingCode:false});
+          afterApply();st.base={};for(const [k,v] of Object.entries(snapMap()))st.base[k]=hsh(v);}
+        else{r.recs.forEach(applyRec);afterApply();st.base={};}
+        applying=false;
+      }else st.base={};
+      st.rev=r.rev;st.init=true;sstSave(st);
+      try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}
+      recsAll=r.recs;
+    }
+    const now=Date.now(),m=snapMap(),changes=[];
+    for(const [k,v] of Object.entries(m))if(st.base[k]!==hsh(v))changes.push({k,v:JSON.parse(v),u:now});
+    for(const k of Object.keys(st.base))if(!(k in m))changes.push({k,del:1,u:now});
+    // الدفعات الكبيرة تتقسم
+    let rev=st.rev;const recs=[];
+    for(let i=0;i<Math.max(1,changes.length);i+=300){
+      const part=changes.slice(i,i+300);
+      const r=await gsCall({action:'sync',email:a.email,token:a.token,since:rev,changes:part});if(!r.ok)throw new Error(r.err);
+      part.forEach(c=>{if(c.del)delete st.base[c.k];else st.base[c.k]=hsh(JSON.stringify(c.v))});
+      recs.push(...r.recs);rev=r.rev;
+    }
+    if(recs.length){applying=true;recs.forEach(x=>{applyRec(x);if(x.del)delete st.base[x.k];else st.base[x.k]=hsh(x.k.startsWith('meta|settings')?JSON.stringify(pubSettings(x.v)):JSON.stringify(x.v))});afterApply();
+      try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}applying=false}
+    st.rev=rev;sstSave(st);a.lastSync=Date.now();try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}
+    syncSt('☁️ '+new Date().toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}),'آخر مزامنة');
+    if((recs.length||recsAll.length)&&!busyUI())route();
+    if(manual)toast('✅ اتزامن'+(recs.length?` — وصل ${recs.length} تعديل`:''));
+  }catch(e){applying=false;syncSt('⚠️','المزامنة فشلت: '+(e.message||e));if(manual)toast('⚠️ المزامنة فشلت: '+(e.message||'مفيش نت'))}
+  finally{syncing=false;if(syncAgain){syncAgain=false;setTimeout(()=>syncNow(),500)}}
+}
+setInterval(()=>{if(document.visibilityState==='visible')syncNow()},45000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncNow()});
+window.addEventListener('online',()=>syncNow());
+
 function backup(){dl(new File([JSON.stringify(db)],'amana-backup-'+today()+'.json',{type:'application/json'}));log('تنزيل نسخة احتياطية');save()}
 function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.items||!d.invoices)throw 0;if(!confirm('البيانات الحالية هتتبدل بالنسخة دي. متأكد؟'))return;db=d;log('استرجاع نسخة احتياطية');save();route();toast('✅ اترجعت')}catch(e){toast('الملف ده مش نسخة صحيحة')}};r.readAsText(f)}
-function resetAll(){if(prompt('اكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
+function resetAll(){if(prompt('⚠️ كل البيانات هتتمسح'+(ab().token?' من كل الأجهزة المتزامنة':'')+'.\nاكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
 
-const APP_VERSION='1.0';
+const APP_VERSION='1.1';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 route();
+setTimeout(()=>syncNow(),1500);
 setTimeout(checkAutoBackup,3000);setInterval(checkAutoBackup,30*60*1000);window.addEventListener('online',checkAutoBackup);
 setTimeout(()=>{$('#splash').classList.add('hide');setTimeout(()=>$('#splash').remove(),700)},1600);
 </script>
