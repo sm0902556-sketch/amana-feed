@@ -15,14 +15,9 @@ function doPost(e) {
     const b = JSON.parse(e.postData.contents);
     const props = PropertiesService.getScriptProperties();
 
-    // ===== حساب المزامنة: اسم مستخدم + كلمة سر (زي برنامج الإخوة) =====
-    if (b.action === 'login' || b.action === 'usync') {
-      const id = acctId(b.app, b.user);
-      if (!id) return out({ ok: false, err: 'اكتب اسم مستخدم (حروف إنجليزي أو أرقام)' });
-      if (b.action === 'login') return out(login(props, id, String(b.pass || '')));
-      if (!okTok(props, id, b.token)) return out({ ok: false, err: 'سجّل الدخول تاني', relogin: 1 });
-      return out(sync(id, b));
-    }
+    // ===== المستخدمين والحساب (زي برنامج الإخوة) =====
+    const ACC = ['login', 'usync', 'users', 'adduser', 'deluser', 'chpass', 'logout'];
+    if (ACC.indexOf(b.action) >= 0) return out(accounts(props, b));
 
     const email = String(b.email || '').trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return out({ ok: false, err: 'الإيميل غلط' });
@@ -81,25 +76,73 @@ function acctId(app, user) {
 function hashPass(pass, salt) {
   return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + '|' + pass, Utilities.Charset.UTF_8));
 }
-function login(props, id, pass) {
-  if (pass.length < 4) return { ok: false, err: 'كلمة السر لازم 4 حروف أو أرقام على الأقل' };
-  const fails = Number(props.getProperty('fail:' + id) || 0);
-  if (fails >= 10) return { ok: false, err: 'محاولات غلط كتير — كلم المبرمج 01123840671' };
-  const raw = props.getProperty('acct:' + id);
-  let created = false;
-  if (!raw) {
-    const salt = Utilities.getUuid();
-    props.setProperty('acct:' + id, JSON.stringify({ salt: salt, h: hashPass(pass, salt), at: Date.now() }));
-    created = true;
-  } else {
-    const a = JSON.parse(raw);
-    if (hashPass(pass, a.salt) !== a.h) { props.setProperty('fail:' + id, String(fails + 1)); return { ok: false, err: 'كلمة السر غلط' }; }
-    props.deleteProperty('fail:' + id);
+const ROLES = { owner: 'صاحب المصنع', staff: 'موظف' };
+function uKey(app, user) { const id = acctId(app, user); return id ? 'u:' + id : ''; }
+function session(props, token) { if (!token) return null; try { return JSON.parse(props.getProperty('tk:' + token) || 'null'); } catch (e) { return null; } }
+function newToken(props, sess) { const t = Utilities.getUuid(); props.setProperty('tk:' + t, JSON.stringify(sess)); return t; }
+function shopUsers(props, shop) { try { return JSON.parse(props.getProperty('shopusers:' + shop) || '[]'); } catch (e) { return []; } }
+
+function accounts(props, b) {
+  const app = String(b.app || 'app');
+  if (b.action === 'login') {
+    const key = uKey(app, b.user), pass = String(b.pass || '');
+    if (!key) return { ok: false, err: 'اسم المستخدم: 3 حروف إنجليزي أو أرقام على الأقل' };
+    if (pass.length < 4) return { ok: false, err: 'كلمة السر لازم 4 حروف أو أرقام على الأقل' };
+    const fails = Number(props.getProperty('fail:' + key) || 0);
+    if (fails >= 10) return { ok: false, err: 'محاولات غلط كتير — كلم المبرمج 01123840671' };
+    const name = String(b.user).trim().toLowerCase();
+    let u = null, created = false;
+    try { u = JSON.parse(props.getProperty(key) || 'null'); } catch (e) {}
+    if (!u) {  // أول مرة: الحساب ده بيبقى صاحب المصنع
+      const salt = Utilities.getUuid(), shop = app + '~' + name;
+      u = { shop: shop, salt: salt, h: hashPass(pass, salt), role: 'owner' };
+      props.setProperty(key, JSON.stringify(u));
+      props.setProperty('shopusers:' + shop, JSON.stringify([name]));
+      created = true;
+    } else if (hashPass(pass, u.salt) !== u.h) {
+      props.setProperty('fail:' + key, String(fails + 1)); return { ok: false, err: 'كلمة السر غلط' };
+    }
+    props.deleteProperty('fail:' + key);
+    const token = newToken(props, { shop: u.shop, user: name, role: u.role });
+    return { ok: true, token: token, created: created, user: name, role: u.role, roleName: ROLES[u.role] || u.role };
   }
-  const token = Utilities.getUuid();
-  const toks = getToks(props, id); toks.push(token);
-  props.setProperty('toks:' + id, JSON.stringify(toks.slice(-10)));
-  return { ok: true, token: token, created: created };
+  const s = session(props, b.token);
+  if (!s) return { ok: false, err: 'سجّل الدخول تاني', relogin: 1 };
+  const me = props.getProperty('u:' + app + '~' + s.user);
+  if (!me) { props.deleteProperty('tk:' + b.token); return { ok: false, err: 'المستخدم ده اتمسح — سجّل دخول تاني', relogin: 1 }; }
+  if (b.action === 'usync') return sync(s.shop, b);
+  if (b.action === 'logout') { props.deleteProperty('tk:' + b.token); return { ok: true }; }
+  if (b.action === 'users') {
+    const list = shopUsers(props, s.shop).map(n => { let r = 'staff'; try { r = JSON.parse(props.getProperty('u:' + app + '~' + n)).role; } catch (e) {} return { user: n, role: r, roleName: ROLES[r] || r }; });
+    return { ok: true, me: s.user, role: s.role, users: list };
+  }
+  if (b.action === 'chpass') {
+    const key = 'u:' + app + '~' + s.user, u = JSON.parse(props.getProperty(key));
+    if (hashPass(String(b.old || ''), u.salt) !== u.h) return { ok: false, err: 'كلمة السر القديمة غلط' };
+    if (String(b.pass || '').length < 4) return { ok: false, err: 'كلمة السر الجديدة 4 حروف على الأقل' };
+    u.salt = Utilities.getUuid(); u.h = hashPass(String(b.pass), u.salt); props.setProperty(key, JSON.stringify(u));
+    return { ok: true };
+  }
+  if (s.role !== 'owner') return { ok: false, err: 'صاحب المصنع بس اللي يقدر يعمل كده' };
+  if (b.action === 'adduser') {
+    const key = uKey(app, b.nuser), name = String(b.nuser || '').trim().toLowerCase();
+    if (!key) return { ok: false, err: 'اسم المستخدم: 3 حروف إنجليزي أو أرقام على الأقل' };
+    if (props.getProperty(key)) return { ok: false, err: 'الاسم ده مستخدم قبل كده — اختار اسم تاني' };
+    if (String(b.npass || '').length < 4) return { ok: false, err: 'كلمة السر 4 حروف على الأقل' };
+    const role = b.role === 'owner' ? 'owner' : 'staff', salt = Utilities.getUuid();
+    props.setProperty(key, JSON.stringify({ shop: s.shop, salt: salt, h: hashPass(String(b.npass), salt), role: role }));
+    const list = shopUsers(props, s.shop); list.push(name); props.setProperty('shopusers:' + s.shop, JSON.stringify(list));
+    return { ok: true };
+  }
+  if (b.action === 'deluser') {
+    const name = String(b.nuser || '').trim().toLowerCase();
+    if (name === s.user) return { ok: false, err: 'مينفعش تمسح نفسك' };
+    const list = shopUsers(props, s.shop); if (list.indexOf(name) < 0) return { ok: false, err: 'المستخدم مش موجود' };
+    props.deleteProperty('u:' + app + '~' + name);
+    props.setProperty('shopusers:' + s.shop, JSON.stringify(list.filter(n => n !== name)));
+    return { ok: true };
+  }
+  return { ok: false, err: 'طلب غير معروف' };
 }
 
 function getToks(props, email) {

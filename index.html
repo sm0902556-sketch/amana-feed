@@ -95,12 +95,23 @@ tr.click{cursor:pointer}tr.click:hover{background:#faf6ea}
 #updBar{position:fixed;bottom:62px;left:10px;right:10px;z-index:45;background:#c99a3b;color:#fff;padding:10px 14px;border-radius:14px;display:none;align-items:center;gap:10px;justify-content:center;font-weight:600;box-shadow:0 4px 14px #0005}
 @media(min-width:900px){#updBar{bottom:14px;left:auto;right:210px;max-width:520px}}
 #updBar button{background:#fff;color:#8a6420;border:0;border-radius:16px;padding:6px 14px;font-weight:700;cursor:pointer}
+#gate{position:fixed;inset:0;z-index:98;background:radial-gradient(circle at 50% 30%,#4a8a50,#1f4224);display:none;align-items:center;justify-content:center;padding:18px}
+#gate .box{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:380px;box-shadow:0 12px 40px #0006;text-align:center}
+#gate .ring{width:86px;height:86px;border-radius:50%;background:#f6e7c1;display:flex;align-items:center;justify-content:center;margin:-62px auto 8px;box-shadow:0 0 0 5px #c99a3b,0 6px 18px #0005}
+#gate h2{color:var(--g);font-size:22px}#gate input{margin-top:10px;text-align:left;font-size:16px;padding:12px}
+#gate .btn{width:100%;justify-content:center;margin-top:14px;padding:13px;font-size:16px}
 </style>
 </head>
 <body>
 <div id="splash"><div class="ring"><svg viewBox="0 0 64 64" width="84" height="84"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><h1>مصنع الأمانة</h1><h3>للأعلاف</h3><div class="bar"><i></i></div><div class="by">برمجة المبرمج محمد سعيد — 01123840671</div></div>
+<div id="gate"><div class="box"><div class="ring" id="gateLogo"></div><h2>مصنع الأمانة</h2><p class="muted">تسجيل الدخول</p>
+<input id="lgU" dir="ltr" autocapitalize="off" autocomplete="username" placeholder="اسم المستخدم">
+<input id="lgP" type="password" dir="ltr" autocomplete="current-password" placeholder="كلمة السر" onkeydown="if(event.key==='Enter')doLogin()">
+<button class="btn" onclick="doLogin()">🔐 دخول</button>
+<p class="muted" style="margin-top:12px;font-size:12px">أول مرة؟ اكتب اسم مستخدم وكلمة سر جديدة والحساب هيتعمل</p>
+<p class="muted" style="margin-top:10px;font-size:11px">برمجة المبرمج محمد سعيد — 01123840671</p></div></div>
 <div id="pdfwrap" dir="ltr" style="position:fixed;top:0;left:-20000px;width:794px"><div id="pdfbox" dir="ltr"></div></div><div class="busy" id="busy">⏳ بيجهّز الـ PDF...</div>
-<header><div class="logo"><svg viewBox="0 0 64 64" width="28" height="28"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><div><h1 id="hName">مصنع الأمانة</h1><small id="hSub">للأعلاف</small></div><span id="syncSt" class="off" onclick="syncInfo()"><i></i><span>المزامنة</span></span><button id="syncBtn" onclick="syncNow(true)" title="تحديث" style="background:#ffffff22;border:1px solid #ffffff55;color:#fff;border-radius:20px;padding:5px 10px;font-size:13px;cursor:pointer">🔄 تحديث</button></header>
+<header><div class="logo"><svg viewBox="0 0 64 64" width="28" height="28"><g fill="#c99a3b" stroke="#8a6420" stroke-width="1"><path d="M32 58V14" stroke="#2f5d34" stroke-width="3" fill="none"/><ellipse cx="32" cy="10" rx="4" ry="7"/><ellipse cx="25" cy="20" rx="4" ry="7" transform="rotate(-35 25 20)"/><ellipse cx="39" cy="20" rx="4" ry="7" transform="rotate(35 39 20)"/><ellipse cx="25" cy="31" rx="4" ry="7" transform="rotate(-35 25 31)"/><ellipse cx="39" cy="31" rx="4" ry="7" transform="rotate(35 39 31)"/><ellipse cx="25" cy="42" rx="4" ry="7" transform="rotate(-35 25 42)"/><ellipse cx="39" cy="42" rx="4" ry="7" transform="rotate(35 39 42)"/></g></svg></div><div><h1 id="hName">مصنع الأمانة</h1><small id="hSub">للأعلاف</small></div><span id="syncSt" class="off" onclick="syncInfo()" style="display:none"><i></i><span></span></span><button id="syncBtn" onclick="syncNow(true)" title="تحديث" style="display:none;background:#ffffff22;border:1px solid #ffffff55;color:#fff;border-radius:20px;padding:5px 10px;font-size:13px;cursor:pointer">🔄 تحديث</button></header>
 <div id="updBar">🎉 <span id="updTxt">فيه إصدار جديد من البرنامج</span> <button onclick="applyUpdate()">تحديث دلوقتي</button></div>
 <main id="app"></main>
 <nav class="bottom" id="nav">
@@ -600,11 +611,16 @@ function settings(){
   <div class="card"><h2>🖼️ البنر</h2><img class="banner" src="${db.settings.banner||BANNER}">
   <div class="row"><label class="btn o" style="margin:0;color:var(--g)">📷 تغيير البنر<input type="file" accept="image/*" style="display:none" onchange="setBanner(this.files[0])"></label>
   ${db.settings.banner?'<button class="btn r" onclick="delete db.settings.banner;save();route()">رجوع للبنر الأصلي</button>':''}</div></div>
-  <div class="card"><h2>☁️ حساب المزامنة</h2>${ab().utoken?`<p>✅ متزامن بحساب <b dir="ltr">${esc(ab().user)}</b> — آخر مزامنة: <b>${fdt(ab().lastSync)}</b></p><div class="row" style="margin-top:8px"><button class="btn" onclick="syncNow(true)">🔄 تحديث</button><button class="btn o" onclick="doLogout()">خروج</button></div>`:loginBox()}</div>
+  <div class="card"><h2>👥 المستخدمين والحساب</h2>${ab().utoken?`<p class="muted">انت داخل باسم <b dir="ltr" style="color:var(--tx)">${esc(ab().user)}</b> (${esc(ab().roleName||'')})</p>
+   <hr style="border:0;border-top:1px solid var(--bd);margin:10px 0"><div id="usersBox"><p class="muted">⏳ بيحمّل المستخدمين...</p></div>
+   ${ab().role==='owner'?`<button class="btn" style="width:100%;justify-content:center;margin-top:10px;padding:12px" onclick="addUserModal()">+ مستخدم جديد</button>`:''}
+   <div class="row" style="margin-top:8px"><button class="btn o" style="justify-content:center" onclick="chpassModal()">تغيير الباسورد بتاعي</button><button class="btn o" style="justify-content:center;color:var(--red);border-color:var(--bd)" onclick="doLogout()">تسجيل خروج</button></div>`
+   :`<p class="muted">مش داخل بحساب.</p>`}</div>
   <div class="card"><h2>💾 النسخ الاحتياطي التلقائي</h2>${abCard()}</div>
   <div class="card"><h2>💾 النسخ الاحتياطي</h2><p class="muted" style="margin-bottom:8px">نزّل نسخة من كل البيانات وابعتها لنفسك على الجيميل أو الواتساب. ترجّعها في أي وقت أو على جهاز تاني.</p>
   <div class="row"><button class="btn bl" onclick="backup()">⬇️ تنزيل نسخة</button><label class="btn o" style="margin:0;color:var(--g)">⬆️ استرجاع نسخة<input type="file" accept=".json" style="display:none" onchange="restore(this.files[0])"></label>
   <button class="btn r" onclick="resetAll()">مسح كل البيانات</button></div></div>${footer()}`;
+  if(ab().utoken)setTimeout(loadUsers,50);
   window.saveS=()=>{Object.assign(db.settings,{name:$('#s1').value.trim()||'مصنع الأمانة',owner:$('#s2').value.trim(),phone:$('#s3').value.trim(),address:$('#s4').value.trim(),footer:$('#s5').value,sub:$('#s6').value.trim(),mgr:$('#s7').value,tax:$('#s8').value});db.seq.sale=Math.max(0,(+$('#s9').value||1)-1);db.seq.purchase=Math.max(0,(+$('#s10').value||1)-1);log('تعديل الإعدادات');save();route();toast('✅ اتحفظت')};
 }
 function setBanner(f){if(!f)return;const img=new Image();img.onload=()=>{const w=1280,h=Math.round(w*img.height/img.width);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);db.settings.banner=c.toDataURL('image/jpeg',0.8);log('تغيير البنر');save();route();toast('✅ اتغير البنر')};img.src=URL.createObjectURL(f)}
@@ -645,10 +661,29 @@ async function doLogin(){const u=$('#lgU').value.trim().toLowerCase(),pw=$('#lgP
   if(!gsURL()){toast('رابط السيرفر مش متحط');return}
   $('#busy').style.display='flex';$('#busy').textContent='⏳ بيدخل...';
   try{const j=await gsCall({action:'login',app:'amana',user:u,pass:pw});if(!j.ok)throw new Error(j.err);
-    Object.assign(ab(),{user:u,utoken:j.token});try{localStorage.removeItem(SK)}catch(e){}log('دخول المزامنة باسم '+u);save();
-    toast(j.created?'✅ اتعمل الحساب '+u+' — اكتب نفس الاسم وكلمة السر على الأجهزة التانية':'✅ دخلت — بيجيب بيانات المصنع');route();await syncNow(true)}
+    Object.assign(ab(),{user:j.user||u,utoken:j.token,role:j.role,roleName:j.roleName});$('#lgP').value='';showGate();try{localStorage.removeItem(SK)}catch(e){}log('تسجيل دخول باسم '+u);save();
+    toast(j.created?'✅ اتعمل الحساب '+u+' (صاحب المصنع)':'✅ دخلت باسم '+u+' — بيجيب بيانات المصنع');route();await syncNow(true)}
   catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}finally{$('#busy').style.display='none';$('#busy').textContent='⏳ بيجهّز الـ PDF...'}}
-function doLogout(){if(!confirm('خروج الجهاز ده من المزامنة؟ (البيانات هتفضل على الجهاز)'))return;Object.assign(ab(),{utoken:''});try{localStorage.removeItem(SK)}catch(e){}save();syncSt('');closeModal();route()}
+async function loadUsers(){const box=$('#usersBox');if(!box)return;
+  try{const j=await gsCall({action:'users',app:'amana',token:ab().utoken});if(!j.ok){if(j.relogin){ab().utoken='';save();route()}throw new Error(j.err)}
+    Object.assign(ab(),{role:j.role});
+    box.innerHTML=j.users.map(u=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0"><span style="font-size:20px">👤</span><b dir="ltr" style="font-size:17px">${esc(u.user)}</b><span class="chip" style="cursor:default">${esc(u.roleName)}</span>
+      ${j.role==='owner'&&u.user!==j.me?`<button class="btn r s" style="margin-right:auto" onclick="delUser('${esc(u.user)}')">مسح</button>`:''}</div>`).join('')}
+  catch(e){box.innerHTML=`<p class="muted">⚠️ مقدرتش أجيب المستخدمين: ${esc(e.message||'مفيش نت')}</p>`}}
+function addUserModal(){modal(`<h3>+ مستخدم جديد</h3><p class="muted" style="margin-bottom:8px">المستخدم الجديد هيدخل على نفس بيانات المصنع من أي جهاز.</p>
+  <div class="row"><div><label>اسم المستخدم (إنجليزي)</label><input id="nuU" dir="ltr" autocapitalize="off"></div><div><label>كلمة السر</label><input id="nuP" type="password" dir="ltr"></div></div>
+  <div class="row"><div><label>الصلاحية</label><select id="nuR"><option value="staff">موظف</option><option value="owner">صاحب المصنع</option></select></div></div>
+  <div class="row" style="margin-top:10px"><button class="btn" onclick="addUser()">إضافة</button><button class="btn o" onclick="closeModal()">إلغاء</button></div>`)}
+async function addUser(){const n=$('#nuU').value.trim().toLowerCase(),p=$('#nuP').value,r=$('#nuR').value;
+  try{const j=await gsCall({action:'adduser',app:'amana',token:ab().utoken,nuser:n,npass:p,role:r});if(!j.ok)throw new Error(j.err);log('إضافة مستخدم '+n);save();closeModal();toast('✅ اتضاف '+n);loadUsers()}
+  catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}}
+async function delUser(n){if(!confirm('مسح المستخدم '+n+'؟ مش هيقدر يدخل تاني.'))return;
+  try{const j=await gsCall({action:'deluser',app:'amana',token:ab().utoken,nuser:n});if(!j.ok)throw new Error(j.err);log('مسح مستخدم '+n);save();toast('اتمسح '+n);loadUsers()}catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}}
+function chpassModal(){modal(`<h3>تغيير الباسورد بتاعي</h3>
+  <div class="row"><div><label>كلمة السر القديمة</label><input id="cpO" type="password" dir="ltr"></div></div><div class="row"><div><label>كلمة السر الجديدة</label><input id="cpN" type="password" dir="ltr"></div></div>
+  <div class="row" style="margin-top:10px"><button class="btn" onclick="chpass()">حفظ</button><button class="btn o" onclick="closeModal()">إلغاء</button></div>`)}
+async function chpass(){try{const j=await gsCall({action:'chpass',app:'amana',token:ab().utoken,old:$('#cpO').value,pass:$('#cpN').value});if(!j.ok)throw new Error(j.err);closeModal();toast('✅ اتغيرت كلمة السر')}catch(e){toast('⚠️ '+(e.message||'مفيش نت'))}}
+function doLogout(){if(!confirm('تسجيل خروج من الجهاز ده؟ (البيانات هتفضل على الجهاز)'))return;gsCall({action:'logout',app:'amana',token:ab().utoken}).catch(()=>{});Object.assign(ab(),{utoken:''});try{localStorage.removeItem(SK)}catch(e){}save();syncSt('');closeModal();route();showGate()}
 const loginBox=()=>`<div class="row"><div><label>اسم المستخدم</label><input id="lgU" dir="ltr" autocapitalize="off" placeholder="مثلاً amana" value="${esc(ab().user||'')}"></div>
   <div><label>كلمة السر</label><input id="lgP" type="password" dir="ltr" placeholder="••••"></div><div style="flex:0"><button class="btn" onclick="doLogin()">🔐 دخول</button></div></div>
   <p class="muted" style="margin-top:6px">أول مرة: اختار اسم وكلمة سر وهيتعمل الحساب. على الموبايل والكمبيوتر اكتب <b>نفس الاسم ونفس كلمة السر</b>.</p>`;
@@ -686,7 +721,7 @@ function abCard(){const a=ab(),l=localCopies(),next=a.last?a.last+DAY:Date.now()
   <div class="row" style="margin:8px 0"><button class="btn" onclick="runBackup(true)">💾 اعمل نسخة وارفعها دلوقتي</button></div>
   <div style="background:#f3f8f3;border-radius:10px;padding:10px;margin:8px 0">
    <b style="color:var(--g)">📧 جيميل صاحب المصنع — نسخة احتياطية كل يوم</b>
-   ${a.token?`<p style="margin-top:6px">✅ متوصل بـ <b dir="ltr">${esc(a.email)}</b> <button class="btn o s" onclick="if(confirm('فصل الجهاز ده عن المزامنة؟'))Object.assign(ab(),{token:'',pendingCode:false}),localStorage.removeItem(SK),save(),route()">فصل</button></p>
+   ${a.token?`<p style="margin-top:6px">✅ متوصل بـ <b dir="ltr">${esc(a.email)}</b> <button class="btn o s" onclick="if(confirm('وقف النسخ الاحتياطي على الجيميل ده؟'))Object.assign(ab(),{token:'',pendingCode:false}),localStorage.removeItem(SK),save(),route()">فصل</button></p>
 `
    :a.pendingCode?`<p class="muted" style="margin:6px 0">اتبعت كود على <b dir="ltr">${esc(a.email)}</b> — اكتبه هنا:</p><div class="row"><div><input id="gmC" inputmode="numeric" placeholder="الكود"></div><div style="flex:0"><button class="btn" onclick="confirmCode()">تأكيد</button></div></div><p style="margin-top:6px"><a href="javascript:void(Object.assign(ab(),{pendingCode:false}),save(),route())" class="muted">تغيير الإيميل / إعادة الإرسال</a></p>`
    :`<div class="row" style="margin-top:6px"><div><input id="gmE" dir="ltr" type="email" placeholder="name@gmail.com" value="${esc(a.email||'')}"></div><div style="flex:0"><button class="btn" onclick="sendCode()">ابعت كود</button></div></div>`}
@@ -707,7 +742,7 @@ let syncing=false,syncAgain=false,syncTimer=null,applying=false;
 function hsh(str){let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return (h>>>0).toString(36)+str.length.toString(36)}
 function sst(){try{return JSON.parse(localStorage.getItem(SK))||{rev:0,base:{},init:false}}catch(e){return {rev:0,base:{},init:false}}}
 function sstSave(st){try{localStorage.setItem(SK,JSON.stringify(st))}catch(e){}}
-const PRIV=['token','email','pendingCode','user','utoken','lastSync'];
+const PRIV=['token','email','pendingCode','user','utoken','lastSync','role','roleName'];
 function pubSettings(st){const c=JSON.parse(JSON.stringify(st));if(c.ab)PRIV.forEach(k=>delete c.ab[k]);return c}
 function snapMap(){const m={};for(const c of COLS)for(const r of db[c]||[])m[c+'|'+r.id]=JSON.stringify(r);
   m['meta|settings']=JSON.stringify(pubSettings(db.settings));m['meta|seq']=JSON.stringify(db.seq);return m}
@@ -724,27 +759,27 @@ function afterApply(){
   db.invoices.sort((a,b)=>a.id<b.id?-1:1);db.cash.sort((a,b)=>a.id<b.id?-1:1);
   db.log.sort((a,b)=>a.d<b.d?1:-1);if(db.log.length>500)db.log.length=500;
 }
-let syncState={c:'off',t:'المزامنة مقفولة',err:''};
+let syncState={c:'off',t:'',err:''};
 function syncSt(t,title){
   const c=!ab().utoken?'off':t.startsWith('🔄')?'run':(t.startsWith('⚠️')||t.startsWith('📴'))?'err':'ok';
-  const label=c==='off'?'المزامنة مقفولة':c==='run'?'بيتزامن...':c==='err'?(t.startsWith('📴')?'مفيش نت':'مش متزامن'):'متزامن — '+(ab().user||'');
+  const label=c==='off'?'':c==='run'?'بيتزامن... — '+(ab().user||''):c==='err'?(t.startsWith('📴')?'مفيش نت — ':'مش متصل — ')+(ab().user||''):'متزامن — '+(ab().user||'');
   syncState={c,t:label,err:title||''};
-  const e=$('#syncSt');if(e){e.className=c;e.querySelector('span').textContent=label}
+  const e=$('#syncSt');if(e){e.className=c;e.querySelector('span').textContent=label;e.style.display=c==='off'?'none':''}const sb=$('#syncBtn');if(sb)sb.style.display=c==='off'?'none':''
 }
 function pendingCount(){try{const st=sst(),m=snapMap();let n=0;for(const [k,v] of Object.entries(m))if(st.base[k]!==hsh(v))n++;for(const k of Object.keys(st.base))if(!(k in m))n++;return st.init?n:Object.keys(m).length}catch(e){return 0}}
 function syncInfo(){const a=ab(),st=sst(),pend=pendingCount();
   const col={ok:'#1f8a4c',run:'#b8860b',err:'#c0392b',off:'#777'}[syncState.c];
-  modal(`<h3>☁️ المزامنة والإصدار</h3>
+  modal(`<h3>👤 الحساب والإصدار</h3>
   <div style="background:${col}15;border:1px solid ${col}55;border-radius:10px;padding:10px;margin-bottom:10px">
    <b style="color:${col};font-size:17px">${syncState.c==='ok'?'✅':syncState.c==='run'?'🔄':syncState.c==='err'?'⚠️':'⏸️'} ${esc(syncState.t)}</b>
    ${syncState.err&&syncState.c==='err'?`<p class="muted" style="margin-top:4px">${esc(syncState.err)}</p>`:''}
   </div>
   ${a.utoken?`<table><tr><td>الحساب</td><td dir="ltr"><b>${esc(a.user)}</b></td></tr>
-   <tr><td>آخر مزامنة</td><td><b>${fdt(a.lastSync)}</b></td></tr>
+   <tr><td>آخر تحديث</td><td><b>${fdt(a.lastSync)}</b></td></tr>
    <tr><td>تعديلات لسه مطلعتش</td><td><b class="${pend?'neg':'pos'}">${pend?pend+' تعديل':'مفيش — كله متزامن'}</b></td></tr>
    <tr><td>النت</td><td>${navigator.onLine===false?'<b class="neg">مقطوع</b>':'<b class="pos">شغال</b>'}</td></tr></table>
-   <div class="row" style="margin-top:10px"><button class="btn" onclick="closeModal();syncNow(true)">🔄 مزامنة دلوقتي</button><button class="btn o" onclick="doLogout()">خروج من المزامنة</button></div>`
-  :`<p style="margin-bottom:8px">المزامنة مقفولة على الجهاز ده — ادخل بحساب المصنع:</p>${loginBox()}`}
+   <div class="row" style="margin-top:10px"><button class="btn" onclick="closeModal();syncNow(true)">🔄 تحديث</button><button class="btn o" onclick="doLogout()">تسجيل خروج</button></div>`
+  :`<p>مش داخل بحساب.</p>`}
   <hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
   <p>📦 إصدار البرنامج: <b>${APP_VERSION}</b> ${newVer?`— <b class="neg">فيه إصدار جديد ${esc(newVer.version)}</b>`:'<span class="pos">(أحدث إصدار)</span>'}</p>
   <div class="row" style="margin-top:8px">${newVer?'<button class="btn w" onclick="applyUpdate()">⬆️ تحديث للإصدار الجديد</button>':''}<button class="btn o" onclick="checkUpdate(true)">🔍 دوّر على تحديث</button><button class="btn o" onclick="showNotes(true)">📝 الجديد في الإصدار</button></div>
@@ -765,6 +800,8 @@ async function applyUpdate(){toast('⬆️ بيحدّث...');
   try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
   location.reload()}
 const NOTES=[
+  ['1.8',['شاشة تسجيل دخول باليوزر والباسورد زي برنامج الإخوة — وأي جهاز داخل بنفس اليوزر بيتحدّث لوحده']],
+  ['1.7',['شاشة «المستخدمين والحساب» زي برنامج الإخوة: مستخدم جديد، تغيير الباسورد، تسجيل خروج']],
   ['1.6',['المزامنة بقت فورية: الفاتورة تظهر على الجهاز التاني في خلال ثواني','الجهاز الجديد بيسحب كل الفواتير على طول من غير أسئلة','خانة دخول المزامنة اتشالت من الصفحة الرئيسية (موجودة في الإعدادات)']],
   ['1.5',['المزامنة بقت باسم مستخدم وكلمة سر زي برنامج الإخوة','فوق مكتوب «متزامن — اسم الحساب» وجنبه زرار تحديث']],
   ['1.4',['خانة تشغيل المزامنة بقت في أول الصفحة الرئيسية لحد ما تتشغل']],
@@ -788,7 +825,7 @@ async function syncNow(manual){
   try{
     const st=sst();let recsAll=[];
     if(!st.init){
-      const r=await gsCall({action:'usync',app:'amana',user:a.user,token:a.utoken,since:0,changes:[]});if(!r.ok){if(r.relogin){a.utoken='';save()}throw new Error(r.err)}
+      const r=await gsCall({action:'usync',app:'amana',token:a.utoken,since:0,changes:[]});if(!r.ok){if(r.relogin){a.utoken='';save();showGate()}throw new Error(r.err)}
       if(r.rev>0){
         const hasLocal=db.invoices.length||db.parties.length||db.cash.length;
         applying=true;
@@ -822,7 +859,7 @@ async function syncNow(manual){
     let rev=st.rev;const recs=[];
     for(let i=0;i<Math.max(1,changes.length);i+=300){
       const part=changes.slice(i,i+300);
-      const r=await gsCall({action:'usync',app:'amana',user:a.user,token:a.utoken,since:rev,changes:part});if(!r.ok){if(r.relogin){a.utoken='';save()}throw new Error(r.err)}
+      const r=await gsCall({action:'usync',app:'amana',token:a.utoken,since:rev,changes:part});if(!r.ok){if(r.relogin){a.utoken='';save()}throw new Error(r.err)}
       part.forEach(c=>{if(c.del)delete st.base[c.k];else st.base[c.k]=hsh(JSON.stringify(c.v))});
       recs.push(...r.recs);rev=r.rev;
     }
@@ -833,8 +870,8 @@ async function syncNow(manual){
     const newInv=recs.filter(x=>x.k.startsWith('invoices|')&&!x.del).length;
     if(newInv&&!manual)toast('🔄 وصل '+newInv+' فاتورة/تعديل من الجهاز التاني');
     if((recs.length||recsAll.length)&&!busyUI())route();
-    if(manual)toast('✅ اتزامن'+(recs.length?` — وصل ${recs.length} تعديل`:''));
-  }catch(e){applying=false;syncSt('⚠️','المزامنة فشلت: '+(e.message||e));if(manual)toast('⚠️ المزامنة فشلت: '+(e.message||'مفيش نت'))}
+    if(manual)toast('✅ اتحدّث'+(recs.length?` — وصل ${recs.length} تعديل`:''));
+  }catch(e){applying=false;syncSt('⚠️','')||console.warn((e.message||e));if(manual)toast('⚠️ مقدرتش أحدّث: '+(e.message||'مفيش نت'))}
   finally{clearTimeout(runT);syncing=false;if(syncAgain){syncAgain=false;setTimeout(()=>syncNow(),500)}}
 }
 setInterval(()=>{if(document.visibilityState==='visible'&&ab().utoken&&navigator.onLine!==false&&!syncing)syncNow()},5000);
@@ -846,12 +883,14 @@ function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{cons
 function resetAll(){if(prompt('⚠️ كل البيانات هتتمسح'+(ab().token?' من كل الأجهزة المتزامنة':'')+'.\nاكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
 
-const APP_VERSION='1.6';
+const APP_VERSION='1.8';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
   let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded&&!busyUI()){reloaded=true;location.reload()}});
 }
 route();
+function showGate(){const g=$('#gate');if(!g)return;$('#gateLogo').innerHTML=WHEAT(56);g.style.display=ab().utoken?'none':'flex'}
+showGate();
 syncSt(ab().utoken?'🔄':'');
 setTimeout(()=>syncNow(),1500);
 setTimeout(()=>checkUpdate(),4000);setInterval(()=>checkUpdate(),10*60*1000);afterUpdateNotice();
