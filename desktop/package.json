@@ -1,0 +1,19 @@
+{
+  "name": "amana-feed",
+  "productName": "مصنع الأمانة",
+  "version": "1.0.0",
+  "description": "برنامج مصنع الأمانة للأعلاف — المبرمج محمد سعيد 01123840671",
+  "author": "M saeed",
+  "main": "main.js",
+  "scripts": { "dist": "electron-builder --win --publish never" },
+  "devDependencies": { "electron": "33.2.1", "electron-builder": "25.1.8" },
+  "build": {
+    "appId": "com.msaeed.amana",
+    "productName": "مصنع الأمانة",
+    "artifactName": "amana-setup.${ext}",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "build/icon.png"],
+    "win": { "target": ["nsis"], "icon": "build/icon.ico" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "shortcutName": "مصنع الأمانة", "language": "1025" }
+  }
+}

@@ -1,0 +1,66 @@
+name: بناء التطبيقات (APK + ويندوز)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android/**', 'desktop/**', '.github/workflows/build-apps.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: Prepare signing key (from repo secrets)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KS" ]; then echo "::error::ضيف ANDROID_KEYSTORE_B64 و ANDROID_KEYSTORE_PASS في Settings > Secrets"; exit 1; fi
+          echo "$KS" | base64 -d > android/app/amana.jks
+      - name: Build APK
+        working-directory: android
+        env:
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: gradle assembleRelease --no-daemon
+      - run: cp android/app/build/outputs/apk/release/app-release.apk amana.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: amana-apk, path: amana.apk }
+      - name: Publish APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-latest
+          name: "تطبيقات مصنع الأمانة"
+          body: |
+            📱 الموبايل: amana.apk
+            💻 الكمبيوتر (ويندوز): amana-setup.exe
+            برمجة المبرمج محمد سعيد — 01123840671
+          files: amana.apk
+          make_latest: true
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Build Windows installer
+        working-directory: desktop
+        run: |
+          npm install --no-audit --no-fund
+          npm run dist
+      - uses: actions/upload-artifact@v4
+        with: { name: amana-windows, path: desktop/dist/amana-setup.exe }
+      - name: Publish installer
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-latest
+          name: "تطبيقات مصنع الأمانة"
+          files: desktop/dist/amana-setup.exe
+          make_latest: true

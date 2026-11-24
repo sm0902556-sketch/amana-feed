@@ -390,7 +390,10 @@ async function makePDF(html,name){
   const blob=pdf.output('blob');
   return new File([blob],name+'.pdf',{type:'application/pdf'});
 }
-function dl(file){const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove()}
+function dl(file){
+  if(window.Android&&Android.saveFile){const fr=new FileReader();fr.onload=()=>Android.saveFile(fr.result.split(',')[1],file.name,file.type||'application/octet-stream');fr.readAsDataURL(file);return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove()}
+if(window.Android&&Android.print){window.print=()=>Android.print(document.title)}
 async function sharePDF(html,name,phone,text){
   $('#busy').style.display='flex';
   try{
@@ -672,9 +675,9 @@ function abCard(){const a=ab(),l=localCopies(),next=a.last?a.last+DAY:Date.now()
   <p class="muted" style="margin-top:8px">النسخ المحفوظة على الجهاز (آخر 7):</p>
   ${l.length?`<div class="tbl"><table>${l.map((c,k)=>`<tr><td>${fdt(c.d)}</td><td>${c.data.invoices.length} فاتورة</td><td><button class="btn o s" onclick="restoreLocal(${k})">استرجاع</button> <button class="btn o s" onclick="dlLocal(${k})">⬇️</button></td></tr>`).join('')}</table></div>`:'<p class="muted">مفيش لسه</p>'}`}
 function restoreLocal(k){const c=localCopies()[k];if(!c||!confirm('البيانات الحالية هتتبدل بنسخة '+fdt(c.d)+'. متأكد؟'))return;const banner=db.settings.banner;db=c.data;if(banner)db.settings.banner=banner;log('استرجاع نسخة تلقائية '+fdt(c.d));save();route();toast('✅ اترجعت')}
-function dlLocal(k){const c=localCopies()[k];const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(c.data)],{type:'application/json'}));a.download='amana-backup-'+new Date(c.d).toISOString().slice(0,10)+'.json';a.click()}
+function dlLocal(k){const c=localCopies()[k];dl(new File([JSON.stringify(c.data)],'amana-backup-'+new Date(c.d).toISOString().slice(0,10)+'.json',{type:'application/json'}))}
 
-function backup(){const b=new Blob([JSON.stringify(db)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='amana-backup-'+today()+'.json';a.click();log('تنزيل نسخة احتياطية');save()}
+function backup(){dl(new File([JSON.stringify(db)],'amana-backup-'+today()+'.json',{type:'application/json'}));log('تنزيل نسخة احتياطية');save()}
 function restore(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.items||!d.invoices)throw 0;if(!confirm('البيانات الحالية هتتبدل بالنسخة دي. متأكد؟'))return;db=d;log('استرجاع نسخة احتياطية');save();route();toast('✅ اترجعت')}catch(e){toast('الملف ده مش نسخة صحيحة')}};r.readAsText(f)}
 function resetAll(){if(prompt('اكتب كلمة "مسح" للتأكيد')!=='مسح')return;db=defaultDB();save();route();toast('اتمسح كل شيء')}
 function logPage(){$('#app').innerHTML=`<div class="card"><h2>📝 سجل التعديلات</h2><div class="tbl"><table><tr><th>الوقت</th><th>العملية</th></tr>${db.log.map(l=>`<tr><td>${new Date(l.d).toLocaleString('ar-EG')}</td><td>${esc(l.m)}</td></tr>`).join('')}</table></div></div>`}
